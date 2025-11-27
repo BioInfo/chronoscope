@@ -1,7 +1,12 @@
 import type { SpacetimeCoordinates, SceneData } from '../types';
 import { formatYear } from '../utils/validation';
 
-const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-preview-image-generation:generateContent';
+// Gemini 3 Pro Image (Nano Banana Pro) - Google's state-of-the-art image generation model
+const GEMINI_MODEL_ID = 'gemini-3-pro-image-preview';
+const GEMINI_API_BASE = 'https://generativelanguage.googleapis.com/v1beta/models';
+
+// LocalStorage key for API key
+const API_KEY_STORAGE_KEY = 'chronoscope_gemini_api_key';
 
 interface GeminiResponse {
   candidates?: Array<{
@@ -22,6 +27,51 @@ interface GeminiResponse {
 }
 
 /**
+ * Get the stored API key from localStorage
+ */
+export function getStoredApiKey(): string | null {
+  try {
+    return localStorage.getItem(API_KEY_STORAGE_KEY);
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Save the API key to localStorage
+ */
+export function saveApiKey(apiKey: string): void {
+  try {
+    if (apiKey.trim()) {
+      localStorage.setItem(API_KEY_STORAGE_KEY, apiKey.trim());
+    } else {
+      localStorage.removeItem(API_KEY_STORAGE_KEY);
+    }
+  } catch (e) {
+    console.error('Failed to save API key:', e);
+  }
+}
+
+/**
+ * Remove the API key from localStorage
+ */
+export function clearApiKey(): void {
+  try {
+    localStorage.removeItem(API_KEY_STORAGE_KEY);
+  } catch (e) {
+    console.error('Failed to clear API key:', e);
+  }
+}
+
+/**
+ * Check if Gemini API is configured (has stored API key)
+ */
+export function isGeminiConfigured(): boolean {
+  const apiKey = getStoredApiKey();
+  return Boolean(apiKey && apiKey.length > 0);
+}
+
+/**
  * Generate a detailed prompt for historical image generation
  */
 export function generateHistoricalPrompt(
@@ -35,18 +85,18 @@ export function generateHistoricalPrompt(
   const timeOfDay = getTimeOfDayDescription(temporal.hour);
   const season = getSeasonDescription(temporal.month, spatial.latitude >= 0);
 
-  // Build a rich, historically accurate prompt
+  // Build a rich, historically accurate prompt optimized for Gemini 3 Pro Image
   const promptParts: string[] = [
-    `Photorealistic historical scene from ${year}.`,
+    `Generate a photorealistic historical scene from ${year}.`,
     `Location: ${sceneData.locationName}.`,
-    `Time: ${timeOfDay} during ${season}.`,
-    `Weather conditions: ${environment.weather.toLowerCase()}, ${environment.temperature}°C.`,
-    `Era: ${anthropology.technologyLevel} period.`,
+    `Time of day: ${timeOfDay} during ${season}.`,
+    `Weather: ${environment.weather.toLowerCase()}, temperature ${environment.temperature}°C.`,
+    `Historical era: ${anthropology.technologyLevel} period.`,
     `Civilization: ${anthropology.civilization}.`,
   ];
 
   // Add era-specific details
-  const eraDetails = getEraSpecificDetails(anthropology.technologyLevel, temporal.year);
+  const eraDetails = getEraSpecificDetails(anthropology.technologyLevel);
   if (eraDetails) {
     promptParts.push(eraDetails);
   }
@@ -59,7 +109,7 @@ export function generateHistoricalPrompt(
 
   // Add hazard-specific elements if relevant
   if (safety.hazardLevel === 'critical' || safety.hazardLevel === 'high') {
-    promptParts.push(`Atmosphere: tense, dramatic, ${safety.hazardType.toLowerCase()}.`);
+    promptParts.push(`Atmosphere: tense, dramatic, depicting ${safety.hazardType.toLowerCase()}.`);
   }
 
   // Add notable event context if available
@@ -67,12 +117,12 @@ export function generateHistoricalPrompt(
     promptParts.push(`Historical context: ${anthropology.notableEvents.join(', ')}.`);
   }
 
-  // Style instructions
+  // Style instructions optimized for Gemini 3 Pro Image's capabilities
   promptParts.push(
-    'Style: cinematic, historically accurate, detailed, atmospheric lighting.',
-    'Perspective: ground-level first-person view as if standing there.',
-    'Do not include any text, watermarks, or modern elements.',
-    'Focus on architectural accuracy, period-appropriate clothing, and environmental details.'
+    'Style: cinematic quality, historically accurate, highly detailed, atmospheric lighting.',
+    'Perspective: ground-level first-person view as if the viewer is standing there witnessing the moment.',
+    'Requirements: No text overlays, no watermarks, no anachronistic modern elements.',
+    'Focus on: architectural accuracy for the period, period-appropriate clothing and hairstyles, authentic environmental details, correct lighting for the time of day.'
   );
 
   return promptParts.join(' ');
@@ -82,14 +132,14 @@ export function generateHistoricalPrompt(
  * Get time of day description from hour
  */
 function getTimeOfDayDescription(hour: number): string {
-  if (hour >= 5 && hour < 7) return 'dawn, early morning golden hour';
-  if (hour >= 7 && hour < 10) return 'morning';
-  if (hour >= 10 && hour < 12) return 'late morning';
-  if (hour >= 12 && hour < 14) return 'midday, sun at zenith';
-  if (hour >= 14 && hour < 17) return 'afternoon';
-  if (hour >= 17 && hour < 20) return 'dusk, golden hour';
-  if (hour >= 20 && hour < 22) return 'evening twilight';
-  return 'night, under stars or moonlight';
+  if (hour >= 5 && hour < 7) return 'dawn, early morning golden hour with soft warm light';
+  if (hour >= 7 && hour < 10) return 'morning with clear directional sunlight';
+  if (hour >= 10 && hour < 12) return 'late morning with bright overhead light';
+  if (hour >= 12 && hour < 14) return 'midday with sun at zenith, harsh shadows';
+  if (hour >= 14 && hour < 17) return 'afternoon with warm angled sunlight';
+  if (hour >= 17 && hour < 20) return 'dusk, golden hour with dramatic orange and pink lighting';
+  if (hour >= 20 && hour < 22) return 'evening twilight with deep blue ambient light';
+  return 'night scene, illuminated by moonlight and period-appropriate artificial lighting';
 }
 
 /**
@@ -100,29 +150,29 @@ function getSeasonDescription(month: number, isNorthernHemisphere: boolean): str
     ? { spring: [3, 4, 5], summer: [6, 7, 8], autumn: [9, 10, 11], winter: [12, 1, 2] }
     : { autumn: [3, 4, 5], winter: [6, 7, 8], spring: [9, 10, 11], summer: [12, 1, 2] };
 
-  if (seasons.spring.includes(month)) return 'spring';
-  if (seasons.summer.includes(month)) return 'summer';
-  if (seasons.autumn.includes(month)) return 'autumn';
-  return 'winter';
+  if (seasons.spring.includes(month)) return 'spring with fresh green foliage and blooming flowers';
+  if (seasons.summer.includes(month)) return 'summer with lush vegetation and warm atmosphere';
+  if (seasons.autumn.includes(month)) return 'autumn with golden and red foliage';
+  return 'winter with bare trees and cold atmosphere';
 }
 
 /**
  * Get era-specific visual details
  */
-function getEraSpecificDetails(era: string, _year?: number): string | null {
+function getEraSpecificDetails(era: string): string | null {
   const details: Record<string, string> = {
-    'Stone Age': 'Primitive shelters, animal skins, stone tools, cave paintings, hunter-gatherer camp.',
-    'Bronze Age': 'Early bronze weapons and tools, simple mud-brick structures, early agriculture.',
-    'Iron Age': 'Iron tools and weapons, hill forts, Celtic/tribal settlements.',
-    'Classical': 'Roman/Greek architecture, marble columns, togas, amphitheaters, aqueducts.',
-    'Medieval': 'Stone castles, timber-frame buildings, knights, peasants, cathedral spires.',
-    'Renaissance': 'Ornate architecture, cobblestone streets, period clothing, early printing.',
-    'Industrial': 'Brick factories, steam engines, coal smoke, gaslight, Victorian clothing.',
-    'Electric': 'Early automobiles, electric lights, art deco architecture, telephone poles.',
-    'Atomic': 'Mid-century modern architecture, vintage cars, neon signs, suburban homes.',
-    'Digital': 'Modern architecture, personal electronics, contemporary clothing.',
-    'Space Age': 'Futuristic elements, space technology, advanced infrastructure.',
-    'Vacuum': 'Lunar or space environment, no atmosphere, stark shadows, Earth in sky.',
+    'Stone Age': 'Visual elements: primitive shelters made of branches and animal hides, people wearing animal skins, stone tools, cave paintings visible, hunter-gatherer encampment.',
+    'Bronze Age': 'Visual elements: early bronze weapons and tools, simple mud-brick or wattle-and-daub structures, evidence of early agriculture, basic pottery.',
+    'Iron Age': 'Visual elements: iron tools and weapons, hill forts with wooden palisades, Celtic/tribal settlements, round houses with thatched roofs.',
+    'Classical': 'Visual elements: Roman or Greek architecture with marble columns and pediments, people in togas and tunics, amphitheaters, aqueducts, paved roads.',
+    'Medieval': 'Visual elements: stone castles and fortifications, timber-frame buildings, knights in armor, peasants in simple clothing, Gothic cathedral spires.',
+    'Renaissance': 'Visual elements: ornate Italian architecture, cobblestone streets, elaborate period clothing with ruffs and doublets, early printing press era aesthetics.',
+    'Industrial': 'Visual elements: red brick factories with smokestacks, steam engines and machinery, coal smoke in air, gaslight illumination, Victorian-era clothing.',
+    'Electric': 'Visual elements: early automobiles (Model T era), electric street lights, art deco architectural elements, telephone poles with wires, 1920s-1930s fashion.',
+    'Atomic': 'Visual elements: mid-century modern architecture, vintage 1950s cars with chrome details, neon signs, suburban homes, optimistic post-war aesthetic.',
+    'Digital': 'Visual elements: modern glass and steel architecture, contemporary urban landscape, current fashion and technology visible.',
+    'Space Age': 'Visual elements: futuristic architecture, advanced technology, space-age aesthetic with clean lines and innovative materials.',
+    'Vacuum': 'Visual elements: lunar or space environment, no atmosphere, stark contrast between illuminated and shadowed areas, Earth visible in the black sky, space suits if humans present.',
   };
 
   return details[era] || null;
@@ -133,41 +183,42 @@ function getEraSpecificDetails(era: string, _year?: number): string | null {
  */
 function getWeatherAtmosphere(weather: string): string | null {
   const atmospheres: Record<string, string> = {
-    'Clear': 'Crystal clear sky, sharp shadows, vibrant colors.',
-    'Cloudy': 'Overcast sky, diffused light, muted tones.',
-    'Rainy': 'Rain falling, wet surfaces reflecting light, people with umbrellas.',
-    'Stormy': 'Dark threatening clouds, lightning in distance, dramatic atmosphere.',
-    'Snowy': 'Snow covering everything, muted sounds, cold blue tones.',
-    'Foggy': 'Thick fog obscuring distance, mysterious atmosphere, muted visibility.',
-    'Windy': 'Trees bending, clothes and flags flapping, dust in air.',
-    'Volcanic Ash': 'Ash falling like snow, orange-tinted sky, apocalyptic atmosphere.',
-    'Nuclear Fallout': 'Dust-filled air, destroyed structures, eerie silence.',
-    'Vacuum': 'No atmosphere, stark contrast between light and shadow, lunar surface.',
+    'Clear': 'Atmosphere: crystal clear sky, sharp defined shadows, vibrant saturated colors, excellent visibility to horizon.',
+    'Cloudy': 'Atmosphere: overcast grey sky, soft diffused lighting with no harsh shadows, slightly muted color tones.',
+    'Rainy': 'Atmosphere: rain visibly falling, wet reflective surfaces on ground and buildings, people with umbrellas or seeking shelter, grey muted lighting.',
+    'Stormy': 'Atmosphere: dark threatening storm clouds, possible lightning in distance, dramatic chiaroscuro lighting, wind effects visible.',
+    'Snowy': 'Atmosphere: snow covering all surfaces, pristine white landscape, muted sounds suggested by stillness, cold blue color cast.',
+    'Foggy': 'Atmosphere: thick fog obscuring distant objects, mysterious ethereal quality, objects fade into white at distance, muted visibility.',
+    'Windy': 'Atmosphere: trees bending in wind, clothes and flags flapping, dust or leaves in air, dynamic movement throughout scene.',
+    'Volcanic Ash': 'Atmosphere: ash falling like grey snow, orange-tinted apocalyptic sky, reduced visibility, sense of impending doom.',
+    'Nuclear Fallout': 'Atmosphere: dust and debris in air, damaged or destroyed structures, eerie silence and desolation, sickly yellow-grey lighting.',
+    'Vacuum': 'Atmosphere: complete absence of atmosphere, stark unfiltered sunlight, pure black sky, extreme contrast between light and shadow.',
   };
 
   return atmospheres[weather] || null;
 }
 
 /**
- * Call Gemini API to generate an image
+ * Call Gemini 3 Pro Image API to generate a historical image
  */
 export async function generateHistoricalImage(
   coordinates: SpacetimeCoordinates,
   sceneData: SceneData
 ): Promise<{ success: boolean; imageData?: string; error?: string }> {
-  const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+  const apiKey = getStoredApiKey();
 
   if (!apiKey) {
     return {
       success: false,
-      error: 'Gemini API key not configured. Please add VITE_GEMINI_API_KEY to your .env file.',
+      error: 'Gemini API key not configured. Please add your API key in Settings.',
     };
   }
 
   const prompt = generateHistoricalPrompt(coordinates, sceneData);
+  const apiUrl = `${GEMINI_API_BASE}/${GEMINI_MODEL_ID}:generateContent`;
 
   try {
-    const response = await fetch(`${GEMINI_API_URL}?key=${apiKey}`, {
+    const response = await fetch(`${apiUrl}?key=${apiKey}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -183,7 +234,7 @@ export async function generateHistoricalImage(
           },
         ],
         generationConfig: {
-          responseModalities: ['TEXT', 'IMAGE'],
+          responseModalities: ['IMAGE'],
         },
       }),
     });
@@ -227,12 +278,4 @@ export async function generateHistoricalImage(
       error: error instanceof Error ? error.message : 'Unknown error occurred',
     };
   }
-}
-
-/**
- * Check if Gemini API is configured
- */
-export function isGeminiConfigured(): boolean {
-  const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
-  return Boolean(apiKey && apiKey.length > 0);
 }

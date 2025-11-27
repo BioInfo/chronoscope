@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import {
   PanelLeftClose,
   PanelLeftOpen,
@@ -14,14 +14,18 @@ import {
   Waypoints,
 } from './components';
 
-function ChronoscopeApp() {
+interface ChronoscopeAppProps {
+  onApiKeyChange: () => void;
+}
+
+function ChronoscopeApp({ onApiKeyChange }: ChronoscopeAppProps) {
   const [leftPanelOpen, setLeftPanelOpen] = useState(true);
   const [rightPanelOpen, setRightPanelOpen] = useState(true);
   const [mobileTab, setMobileTab] = useState<'controls' | 'viewport' | 'data'>('viewport');
 
   return (
     <div className="min-h-screen bg-chrono-black flex flex-col">
-      <Header />
+      <Header onApiKeyChange={onApiKeyChange} />
 
       {/* Desktop Layout */}
       <div className="hidden lg:flex flex-1 overflow-hidden">
@@ -164,9 +168,17 @@ function ChronoscopeApp() {
 }
 
 function App() {
+  // Use a key to force re-render of the provider when API key changes
+  const [providerKey, setProviderKey] = useState(0);
+
+  const handleApiKeyChange = useCallback(() => {
+    // Increment key to force ChronoscopeProvider to re-mount and recalculate isApiConfigured
+    setProviderKey(k => k + 1);
+  }, []);
+
   return (
-    <ChronoscopeProvider>
-      <ChronoscopeApp />
+    <ChronoscopeProvider key={providerKey}>
+      <ChronoscopeApp onApiKeyChange={handleApiKeyChange} />
     </ChronoscopeProvider>
   );
 }

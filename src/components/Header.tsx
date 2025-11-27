@@ -1,15 +1,23 @@
 import { useState, useEffect } from 'react';
 import {
   Clock,
-  Settings,
+  Settings as SettingsIcon,
   Info,
   X,
   Github,
 } from 'lucide-react';
+import { Settings } from './Settings';
+import { isGeminiConfigured } from '../services/geminiService';
 
-export function Header() {
+interface HeaderProps {
+  onApiKeyChange?: () => void;
+}
+
+export function Header({ onApiKeyChange }: HeaderProps) {
   const [currentTime, setCurrentTime] = useState(new Date());
   const [showInfo, setShowInfo] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
+  const [apiConfigured, setApiConfigured] = useState(isGeminiConfigured());
 
   // Update real-world time every second
   useEffect(() => {
@@ -75,10 +83,14 @@ export function Header() {
                 <Info className="w-5 h-5" />
               </button>
               <button
-                className="p-2 text-chrono-text-dim hover:text-chrono-blue transition-colors"
+                onClick={() => setShowSettings(true)}
+                className="relative p-2 text-chrono-text-dim hover:text-chrono-blue transition-colors"
                 title="Settings"
               >
-                <Settings className="w-5 h-5" />
+                <SettingsIcon className="w-5 h-5" />
+                {!apiConfigured && (
+                  <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-chrono-amber" />
+                )}
               </button>
             </div>
 
@@ -92,6 +104,16 @@ export function Header() {
           </div>
         </div>
       </header>
+
+      {/* Settings Modal */}
+      <Settings
+        isOpen={showSettings}
+        onClose={() => setShowSettings(false)}
+        onApiKeyChange={() => {
+          setApiConfigured(isGeminiConfigured());
+          onApiKeyChange?.();
+        }}
+      />
 
       {/* Info Modal */}
       {showInfo && (
