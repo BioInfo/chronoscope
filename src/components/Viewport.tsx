@@ -4,6 +4,10 @@ import {
   Mountain,
   Eye,
   Radio,
+  Image,
+  Loader2,
+  AlertCircle,
+  Sparkles,
 } from 'lucide-react';
 import { useChronoscope } from '../context/ChronoscopeContext';
 import type { HazardLevel } from '../types';
@@ -69,10 +73,20 @@ const getTimeAtmosphere = (hour: number) => {
 };
 
 export function Viewport() {
-  const { state } = useChronoscope();
-  const { currentScene, isRendering, renderProgress, viewport, inputCoordinates } = state;
+  const { state, generateImage, isApiConfigured } = useChronoscope();
+  const {
+    currentScene,
+    isRendering,
+    renderProgress,
+    viewport,
+    inputCoordinates,
+    generatedImage,
+    isGeneratingImage,
+    imageError,
+  } = state;
 
   const [compassRotation, setCompassRotation] = useState(0);
+  const [showImage, setShowImage] = useState(true);
   const stars = useMemo(() => generateStars(50), []);
 
   // Animate compass slightly
@@ -88,79 +102,101 @@ export function Viewport() {
   const hour = currentScene?.coordinates.temporal.hour ?? inputCoordinates.temporal.hour;
   const atmosphere = getTimeAtmosphere(hour);
 
+  const handleGenerateImage = () => {
+    generateImage();
+  };
+
   return (
     <div className="relative w-full h-full min-h-[400px] lg:min-h-0 overflow-hidden rounded-lg border border-chrono-border bg-chrono-black">
-      {/* Background layers */}
-      <div className={`absolute inset-0 bg-gradient-to-br ${atmosphere.baseColor} transition-all duration-1000`} />
-
-      {/* Stars (visible at night or in space) */}
-      <div className="absolute inset-0 overflow-hidden" style={{ opacity: 1 - atmosphere.brightness }}>
-        {stars.map((star) => (
-          <div
-            key={star.id}
-            className="absolute rounded-full bg-white animate-pulse"
-            style={{
-              left: `${star.x}%`,
-              top: `${star.y}%`,
-              width: star.size,
-              height: star.size,
-              opacity: star.opacity,
-              animationDelay: `${star.animationDelay}s`,
-            }}
+      {/* Generated Image Display */}
+      {generatedImage && showImage && (
+        <div className="absolute inset-0 z-5">
+          <img
+            src={generatedImage}
+            alt="Generated historical view"
+            className="w-full h-full object-cover"
           />
-        ))}
-      </div>
-
-      {/* Hazard color overlay */}
-      {currentScene && (
-        <div
-          className={`absolute inset-0 bg-gradient-to-br ${colors.gradient} transition-all duration-1000`}
-          style={{ opacity: hazardLevel === 'critical' ? 0.5 : hazardLevel === 'high' ? 0.3 : 0.2 }}
-        />
+          {/* Subtle overlay for HUD visibility */}
+          <div className="absolute inset-0 bg-gradient-to-t from-chrono-black/60 via-transparent to-chrono-black/40" />
+        </div>
       )}
 
-      {/* Animated grid */}
-      <div className="absolute inset-0 grid-overlay opacity-30" />
+      {/* Atmospheric Placeholder (shown when no image or toggled off) */}
+      {(!generatedImage || !showImage) && (
+        <>
+          {/* Background layers */}
+          <div className={`absolute inset-0 bg-gradient-to-br ${atmosphere.baseColor} transition-all duration-1000`} />
 
-      {/* Scan line effect */}
-      <div className="scanline" />
+          {/* Stars (visible at night or in space) */}
+          <div className="absolute inset-0 overflow-hidden" style={{ opacity: 1 - atmosphere.brightness }}>
+            {stars.map((star) => (
+              <div
+                key={star.id}
+                className="absolute rounded-full bg-white animate-pulse"
+                style={{
+                  left: `${star.x}%`,
+                  top: `${star.y}%`,
+                  width: star.size,
+                  height: star.size,
+                  opacity: star.opacity,
+                  animationDelay: `${star.animationDelay}s`,
+                }}
+              />
+            ))}
+          </div>
 
-      {/* Center wireframe */}
-      <div className="absolute inset-0 flex items-center justify-center">
-        <div className="relative w-64 h-64 md:w-80 md:h-80">
-          {/* Outer ring */}
-          <div
-            className="absolute inset-0 rounded-full border-2 animate-pulse-slow"
-            style={{ borderColor: colors.primary, boxShadow: `0 0 20px ${colors.glow}` }}
-          />
+          {/* Hazard color overlay */}
+          {currentScene && (
+            <div
+              className={`absolute inset-0 bg-gradient-to-br ${colors.gradient} transition-all duration-1000`}
+              style={{ opacity: hazardLevel === 'critical' ? 0.5 : hazardLevel === 'high' ? 0.3 : 0.2 }}
+            />
+          )}
 
-          {/* Inner rings */}
-          <div
-            className="absolute inset-8 rounded-full border opacity-50"
-            style={{ borderColor: colors.secondary }}
-          />
-          <div
-            className="absolute inset-16 rounded-full border opacity-30"
-            style={{ borderColor: colors.primary }}
-          />
+          {/* Animated grid */}
+          <div className="absolute inset-0 grid-overlay opacity-30" />
 
-          {/* Center dot */}
-          <div
-            className="absolute left-1/2 top-1/2 w-4 h-4 -translate-x-1/2 -translate-y-1/2 rounded-full animate-pulse"
-            style={{ backgroundColor: colors.primary, boxShadow: `0 0 20px ${colors.glow}` }}
-          />
+          {/* Scan line effect */}
+          <div className="scanline" />
 
-          {/* Crosshairs */}
-          <div
-            className="absolute left-1/2 top-0 w-px h-full -translate-x-1/2 opacity-30"
-            style={{ background: `linear-gradient(to bottom, transparent, ${colors.primary}, transparent)` }}
-          />
-          <div
-            className="absolute left-0 top-1/2 w-full h-px -translate-y-1/2 opacity-30"
-            style={{ background: `linear-gradient(to right, transparent, ${colors.primary}, transparent)` }}
-          />
-        </div>
-      </div>
+          {/* Center wireframe */}
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="relative w-64 h-64 md:w-80 md:h-80">
+              {/* Outer ring */}
+              <div
+                className="absolute inset-0 rounded-full border-2 animate-pulse-slow"
+                style={{ borderColor: colors.primary, boxShadow: `0 0 20px ${colors.glow}` }}
+              />
+
+              {/* Inner rings */}
+              <div
+                className="absolute inset-8 rounded-full border opacity-50"
+                style={{ borderColor: colors.secondary }}
+              />
+              <div
+                className="absolute inset-16 rounded-full border opacity-30"
+                style={{ borderColor: colors.primary }}
+              />
+
+              {/* Center dot */}
+              <div
+                className="absolute left-1/2 top-1/2 w-4 h-4 -translate-x-1/2 -translate-y-1/2 rounded-full animate-pulse"
+                style={{ backgroundColor: colors.primary, boxShadow: `0 0 20px ${colors.glow}` }}
+              />
+
+              {/* Crosshairs */}
+              <div
+                className="absolute left-1/2 top-0 w-px h-full -translate-x-1/2 opacity-30"
+                style={{ background: `linear-gradient(to bottom, transparent, ${colors.primary}, transparent)` }}
+              />
+              <div
+                className="absolute left-0 top-1/2 w-full h-px -translate-y-1/2 opacity-30"
+                style={{ background: `linear-gradient(to right, transparent, ${colors.primary}, transparent)` }}
+              />
+            </div>
+          </div>
+        </>
+      )}
 
       {/* Vignette */}
       <div className="absolute inset-0 vignette pointer-events-none" />
@@ -173,14 +209,19 @@ export function Viewport() {
         {/* Top left - Status */}
         <div className="absolute top-4 left-4 space-y-2">
           <div className="flex items-center gap-2">
-            <div className={`w-2 h-2 rounded-full ${isRendering ? 'bg-chrono-yellow animate-pulse' : 'bg-chrono-green'}`} />
+            <div className={`w-2 h-2 rounded-full ${isRendering || isGeneratingImage ? 'bg-chrono-yellow animate-pulse' : 'bg-chrono-green'}`} />
             <span className="font-mono text-xs text-chrono-text-dim uppercase tracking-wider">
-              {isRendering ? 'Rendering' : 'Ready'}
+              {isRendering ? 'Rendering' : isGeneratingImage ? 'Generating' : 'Ready'}
             </span>
           </div>
           <div className="font-mono text-xs text-chrono-text-dim">
             <span className="text-chrono-blue">SYS</span> TEMPORAL_ENGINE v2.1
           </div>
+          {generatedImage && (
+            <div className="font-mono text-xs text-chrono-green">
+              <span className="text-chrono-green">IMG</span> AI Generated
+            </div>
+          )}
         </div>
 
         {/* Top right - Compass */}
@@ -232,6 +273,63 @@ export function Viewport() {
         </div>
       </div>
 
+      {/* Image Generation Controls */}
+      {currentScene && !isRendering && (
+        <div className="absolute top-16 left-4 space-y-2 pointer-events-auto">
+          {/* Generate Image Button */}
+          <button
+            onClick={handleGenerateImage}
+            disabled={isGeneratingImage || !isApiConfigured}
+            className="flex items-center gap-2 px-3 py-2 bg-chrono-panel/90 border border-chrono-border rounded
+                       text-chrono-text font-mono text-xs uppercase tracking-wider
+                       hover:border-chrono-blue hover:bg-chrono-blue/10 transition-all
+                       disabled:opacity-50 disabled:cursor-not-allowed"
+            title={!isApiConfigured ? 'API key not configured' : 'Generate AI image'}
+          >
+            {isGeneratingImage ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                <span>Generating...</span>
+              </>
+            ) : (
+              <>
+                <Sparkles className="w-4 h-4 text-chrono-yellow" />
+                <span>Generate View</span>
+              </>
+            )}
+          </button>
+
+          {/* Toggle Image/Placeholder */}
+          {generatedImage && (
+            <button
+              onClick={() => setShowImage(!showImage)}
+              className="flex items-center gap-2 px-3 py-2 bg-chrono-panel/90 border border-chrono-border rounded
+                         text-chrono-text font-mono text-xs uppercase tracking-wider
+                         hover:border-chrono-blue hover:bg-chrono-blue/10 transition-all"
+            >
+              <Image className="w-4 h-4" />
+              <span>{showImage ? 'Show Grid' : 'Show Image'}</span>
+            </button>
+          )}
+
+          {/* API not configured warning */}
+          {!isApiConfigured && (
+            <div className="flex items-center gap-2 px-3 py-2 bg-chrono-orange/10 border border-chrono-orange/30 rounded text-xs">
+              <AlertCircle className="w-4 h-4 text-chrono-orange" />
+              <span className="text-chrono-orange font-mono">API key needed</span>
+            </div>
+          )}
+
+          {/* Image generation error */}
+          {imageError && (
+            <div className="flex items-start gap-2 px-3 py-2 bg-chrono-red/10 border border-chrono-red/30 rounded text-xs max-w-xs">
+              <AlertCircle className="w-4 h-4 text-chrono-red flex-shrink-0 mt-0.5" />
+              <span className="text-chrono-red font-mono">{imageError}</span>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Render progress overlay */}
       {isRendering && (
         <div className="absolute inset-0 bg-chrono-black/50 flex flex-col items-center justify-center z-10">
@@ -264,8 +362,24 @@ export function Viewport() {
         </div>
       )}
 
+      {/* Image generation overlay */}
+      {isGeneratingImage && (
+        <div className="absolute inset-0 bg-chrono-black/70 flex flex-col items-center justify-center z-10">
+          <div className="text-center space-y-4">
+            <Sparkles className="w-12 h-12 text-chrono-yellow animate-pulse mx-auto" />
+            <div className="font-mono text-chrono-yellow text-lg animate-pulse">
+              GENERATING HISTORICAL VIEW
+            </div>
+            <div className="font-mono text-sm text-chrono-text-dim">
+              AI is reconstructing the scene...
+            </div>
+            <Loader2 className="w-8 h-8 text-chrono-blue animate-spin mx-auto" />
+          </div>
+        </div>
+      )}
+
       {/* Location name overlay */}
-      {currentScene && !isRendering && (
+      {currentScene && !isRendering && !isGeneratingImage && !generatedImage && (
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center pointer-events-none mt-32">
           <div className="font-mono text-xl text-chrono-text glow-blue animate-pulse">
             {currentScene.locationName}

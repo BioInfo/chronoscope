@@ -100,6 +100,11 @@ export interface ChronoscopeState {
   // Rendered scene (null until first render)
   currentScene: SceneData | null;
 
+  // Generated image
+  generatedImage: string | null; // Base64 data URL
+  isGeneratingImage: boolean;
+  imageError: string | null;
+
   // UI state
   isRendering: boolean;
   renderProgress: number; // 0-100
@@ -123,6 +128,9 @@ export type ChronoscopeAction =
   | { type: 'START_RENDER' }
   | { type: 'UPDATE_RENDER_PROGRESS'; payload: number }
   | { type: 'COMPLETE_RENDER'; payload: SceneData }
+  | { type: 'START_IMAGE_GENERATION' }
+  | { type: 'COMPLETE_IMAGE_GENERATION'; payload: string }
+  | { type: 'IMAGE_GENERATION_ERROR'; payload: string }
   | { type: 'SET_ERROR'; payload: string }
   | { type: 'CLEAR_ERROR' }
   | { type: 'SET_VIEWPORT'; payload: Partial<ChronoscopeState['viewport']> }

@@ -9,6 +9,7 @@ import type {
 } from '../types';
 import { generateScene, simulateRender } from '../utils/sceneGenerator';
 import { validateSpatialCoordinates, validateTemporalCoordinates } from '../utils/validation';
+import { generateHistoricalImage, isGeminiConfigured } from '../services/geminiService';
 
 // Default coordinates: London, present day
 const DEFAULT_COORDINATES: SpacetimeCoordinates = {
@@ -28,6 +29,9 @@ const DEFAULT_COORDINATES: SpacetimeCoordinates = {
 const INITIAL_STATE: ChronoscopeState = {
   inputCoordinates: DEFAULT_COORDINATES,
   currentScene: null,
+  generatedImage: null,
+  isGeneratingImage: false,
+  imageError: null,
   isRendering: false,
   renderProgress: 0,
   viewport: {
@@ -73,6 +77,8 @@ function chronoscopeReducer(state: ChronoscopeState, action: ChronoscopeAction):
         isRendering: true,
         renderProgress: 0,
         error: null,
+        generatedImage: null,
+        imageError: null,
       };
 
     case 'UPDATE_RENDER_PROGRESS':
@@ -89,6 +95,27 @@ function chronoscopeReducer(state: ChronoscopeState, action: ChronoscopeAction):
         currentScene: action.payload,
       };
 
+    case 'START_IMAGE_GENERATION':
+      return {
+        ...state,
+        isGeneratingImage: true,
+        imageError: null,
+      };
+
+    case 'COMPLETE_IMAGE_GENERATION':
+      return {
+        ...state,
+        isGeneratingImage: false,
+        generatedImage: action.payload,
+      };
+
+    case 'IMAGE_GENERATION_ERROR':
+      return {
+        ...state,
+        isGeneratingImage: false,
+        imageError: action.payload,
+      };
+
     case 'SET_ERROR':
       return {
         ...state,
@@ -100,6 +127,7 @@ function chronoscopeReducer(state: ChronoscopeState, action: ChronoscopeAction):
       return {
         ...state,
         error: null,
+        imageError: null,
       };
 
     case 'SET_VIEWPORT':
@@ -127,9 +155,11 @@ interface ChronoscopeContextType {
   setCoordinates: (coords: SpacetimeCoordinates) => void;
   renderScene: () => void;
   jumpToWaypoint: (coords: SpacetimeCoordinates, previewData?: SceneData) => void;
+  generateImage: () => Promise<void>;
   setViewport: (viewport: Partial<ChronoscopeState['viewport']>) => void;
   clearError: () => void;
   reset: () => void;
+  isApiConfigured: boolean;
 }
 
 const ChronoscopeContext = createContext<ChronoscopeContextType | null>(null);
@@ -208,6 +238,34 @@ export function ChronoscopeProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  const generateImage = useCallback(async () => {
+    if (!state.currentScene) {
+      dispatch({ type: 'IMAGE_GENERATION_ERROR', payload: 'No scene data available. Render a scene first.' });
+      return;
+    }
+
+    if (!isGeminiConfigured()) {
+      dispatch({
+        type: 'IMAGE_GENERATION_ERROR',
+        payload: 'Gemini API key not configured. Add VITE_GEMINI_API_KEY to your .env file.',
+      });
+      return;
+    }
+
+    dispatch({ type: 'START_IMAGE_GENERATION' });
+
+    const result = await generateHistoricalImage(
+      state.currentScene.coordinates,
+      state.currentScene
+    );
+
+    if (result.success && result.imageData) {
+      dispatch({ type: 'COMPLETE_IMAGE_GENERATION', payload: result.imageData });
+    } else {
+      dispatch({ type: 'IMAGE_GENERATION_ERROR', payload: result.error || 'Unknown error' });
+    }
+  }, [state.currentScene]);
+
   const setViewport = useCallback((viewport: Partial<ChronoscopeState['viewport']>) => {
     dispatch({ type: 'SET_VIEWPORT', payload: viewport });
   }, []);
@@ -227,9 +285,11 @@ export function ChronoscopeProvider({ children }: { children: ReactNode }) {
     setCoordinates,
     renderScene,
     jumpToWaypoint,
+    generateImage,
     setViewport,
     clearError,
     reset,
+    isApiConfigured: isGeminiConfigured(),
   };
 
   return (
