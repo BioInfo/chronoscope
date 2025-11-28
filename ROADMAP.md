@@ -197,6 +197,7 @@ Track these KPIs to guide future development:
 |---------|------|---------|
 | 1.0.0 | 2025-11-28 | Initial app launch with core features |
 | 1.1.0 | 2025-11-28 | Phase 1: Essential UX (sharing, history, gallery) ✅ |
+| 1.1.1 | 2025-11-28 | Bug fixes: URL sharing coordinates, image display persistence, gallery deduplication ✅ |
 | 1.2.0 | TBD | Phase 2: Temporal navigation (slider, chat) |
 | 2.0.0 | TBD | Phase 3: Enhanced discovery |
 
@@ -228,5 +229,19 @@ Open an issue with:
 - **Contributing**: See [CONTRIBUTING.md](CONTRIBUTING.md)
 
 ---
+
+---
+
+## Recent Updates (v1.1.1 - 2025-11-28)
+
+### Bug Fixes
+- **URL Sharing**: Fixed coordinate encoding to use actual scene coordinates instead of default values
+- **Image Display**: Generated images now persist in viewport correctly across scene navigation
+- **Gallery Duplicates**: Implemented database-level duplicate prevention to avoid saving identical images multiple times
+
+### Technical Improvements
+- Modified `renderScene()` to accept optional coordinates parameter for better state management
+- Added smart coordinate comparison in reducer to preserve images when appropriate
+- Enhanced `saveGalleryImage()` with duplicate detection using image data comparison
 
 *Last updated: 2025-11-28*
