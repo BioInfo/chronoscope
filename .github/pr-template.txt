@@ -1,0 +1,17 @@
+## Changes
+
+This PR was automatically created for a feature branch.
+
+### Checklist
+- [ ] Code follows project style guidelines
+- [ ] Self-review completed
+- [ ] Comments added for complex logic
+- [ ] No new warnings generated
+- [ ] Tested locally
+
+### Description
+Please add a description of your changes here.
+
+---
+
+**Auto-generated PR** - Please review and update the description before merging.

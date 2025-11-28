@@ -34,32 +34,8 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           BRANCH_NAME: ${{ github.ref_name }}
         run: |
-          # Generate PR title from branch name (safely)
           PR_TITLE=$(echo "$BRANCH_NAME" | sed 's/-/ /g' | sed 's/^./\U&/' | sed 's/ ./\U&/g')
-
-          # Create PR with simplified body
-          gh pr create \
-            --title "$PR_TITLE" \
-            --body "## Changes
-
-This PR was automatically created for a feature branch.
-
-### Checklist
-- [ ] Code follows project style guidelines
-- [ ] Self-review completed
-- [ ] Comments added for complex logic
-- [ ] No new warnings generated
-- [ ] Tested locally
-
-### Description
-Please add a description of your changes here.
-
----
-
-**Auto-generated PR** - Please review and update the description before merging." \
-            --base main \
-            --head "$BRANCH_NAME" \
-            --label "auto-generated"
+          gh pr create --title "$PR_TITLE" --body-file .github/pr-template.txt --base main --head "$BRANCH_NAME" --label "auto-generated"
 
       - name: Comment on existing PR
         if: steps.check-pr.outputs.pr_exists != '0'
