@@ -37,9 +37,10 @@ jobs:
           # Generate PR title from branch name (safely)
           PR_TITLE=$(echo "$BRANCH_NAME" | sed 's/-/ /g' | sed 's/^./\U&/' | sed 's/ ./\U&/g')
 
-          # Create PR body (using heredoc for safety)
-          PR_BODY=$(cat <<'EOF'
-## Changes
+          # Create PR with simplified body
+          gh pr create \
+            --title "$PR_TITLE" \
+            --body "## Changes
 
 This PR was automatically created for a feature branch.
 
@@ -55,13 +56,7 @@ Please add a description of your changes here.
 
 ---
 
-**Auto-generated PR** - Please review and update the description before merging.
-EOF
-)
-
-          gh pr create \
-            --title "$PR_TITLE" \
-            --body "$PR_BODY" \
+**Auto-generated PR** - Please review and update the description before merging." \
             --base main \
             --head "$BRANCH_NAME" \
             --label "auto-generated"
