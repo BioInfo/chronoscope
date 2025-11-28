@@ -32,3 +32,11 @@ yarn-error.log*
 
 # Misc
 *.log
+
+# Vercel
+.vercel/
+.vercel
+
+# Testing
+coverage/
+.nyc_output/
