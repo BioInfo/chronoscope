@@ -4,3 +4,4 @@ export { Viewport } from './Viewport';
 export { DataStream } from './DataStream';
 export { Waypoints } from './Waypoints';
 export { Settings } from './Settings';
+export { TemporalJournal } from './TemporalJournal';

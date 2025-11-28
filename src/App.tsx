@@ -12,8 +12,10 @@ import {
   Viewport,
   DataStream,
   Waypoints,
+  TemporalJournal,
 } from './components';
 import { getCoordinatesFromUrl, updateUrlWithCoordinates } from './utils/urlManager';
+import { addJournalEntry } from './utils/temporalJournal';
 
 interface ChronoscopeAppProps {
   onApiKeyChange: () => void;
@@ -37,12 +39,22 @@ function ChronoscopeApp({ onApiKeyChange }: ChronoscopeAppProps) {
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Update URL when scene is rendered
+  // Update URL and save to journal when scene is rendered
   useEffect(() => {
     if (state.currentScene) {
       updateUrlWithCoordinates(state.currentScene.coordinates);
+
+      // Save to journal
+      addJournalEntry(
+        state.currentScene.coordinates,
+        state.currentScene.locationName,
+        !!state.generatedImage
+      );
+
+      // Notify journal component to refresh
+      window.dispatchEvent(new Event('journalUpdated'));
     }
-  }, [state.currentScene]);
+  }, [state.currentScene]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <div className="min-h-screen bg-chrono-black flex flex-col">
@@ -75,6 +87,7 @@ function ChronoscopeApp({ onApiKeyChange }: ChronoscopeAppProps) {
             <div className="flex-1 overflow-y-auto p-4 space-y-4">
               <ControlPlane />
               <Waypoints />
+              <TemporalJournal />
             </div>
           )}
         </div>
@@ -155,6 +168,7 @@ function ChronoscopeApp({ onApiKeyChange }: ChronoscopeAppProps) {
             <div className="space-y-4">
               <ControlPlane />
               <Waypoints />
+              <TemporalJournal />
             </div>
           )}
           {mobileTab === 'viewport' && <Viewport />}
