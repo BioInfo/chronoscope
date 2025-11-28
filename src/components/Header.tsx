@@ -5,9 +5,16 @@ import {
   Info,
   X,
   Github,
+  Share2,
+  Check,
+  Images,
 } from 'lucide-react';
 import { Settings } from './Settings';
+import { ImageGallery } from './ImageGallery';
 import { isGeminiConfigured } from '../services/geminiService';
+import { getGalleryCount } from '../services/galleryService';
+import { useChronoscope } from '../context/ChronoscopeContext';
+import { copyShareableUrl } from '../utils/urlManager';
 
 interface HeaderProps {
   onApiKeyChange?: () => void;
@@ -17,7 +24,20 @@ export function Header({ onApiKeyChange }: HeaderProps) {
   const [currentTime, setCurrentTime] = useState(new Date());
   const [showInfo, setShowInfo] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [showGallery, setShowGallery] = useState(false);
   const [apiConfigured, setApiConfigured] = useState(isGeminiConfigured());
+  const [galleryCount, setGalleryCount] = useState(0);
+  const [copied, setCopied] = useState(false);
+  const { state } = useChronoscope();
+
+  const handleShare = async () => {
+    if (!state.currentScene) return;
+    const success = await copyShareableUrl(state.currentScene.coordinates);
+    if (success) {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
 
   // Update real-world time every second
   useEffect(() => {
@@ -25,6 +45,19 @@ export function Header({ onApiKeyChange }: HeaderProps) {
       setCurrentTime(new Date());
     }, 1000);
     return () => clearInterval(timer);
+  }, []);
+
+  // Load gallery count on mount and listen for updates
+  useEffect(() => {
+    const loadCount = async () => {
+      const count = await getGalleryCount();
+      setGalleryCount(count);
+    };
+    loadCount();
+
+    // Listen for gallery update events
+    window.addEventListener('galleryUpdated', loadCount);
+    return () => window.removeEventListener('galleryUpdated', loadCount);
   }, []);
 
   return (
@@ -76,6 +109,32 @@ export function Header({ onApiKeyChange }: HeaderProps) {
             {/* Actions */}
             <div className="flex items-center gap-2">
               <button
+                onClick={handleShare}
+                disabled={!state.currentScene}
+                className={`p-2 transition-colors ${
+                  state.currentScene
+                    ? copied
+                      ? 'text-chrono-green'
+                      : 'text-chrono-text-dim hover:text-chrono-blue'
+                    : 'text-chrono-text-dim/30 cursor-not-allowed'
+                }`}
+                title={copied ? 'Link copied!' : state.currentScene ? 'Share coordinates' : 'Render a scene first'}
+              >
+                {copied ? <Check className="w-5 h-5" /> : <Share2 className="w-5 h-5" />}
+              </button>
+              <button
+                onClick={() => setShowGallery(true)}
+                className="relative p-2 text-chrono-text-dim hover:text-chrono-green transition-colors"
+                title="Image Gallery"
+              >
+                <Images className="w-5 h-5" />
+                {galleryCount > 0 && (
+                  <span className="absolute -top-0.5 -right-0.5 min-w-[1rem] h-4 px-1 flex items-center justify-center text-[10px] font-mono rounded-full bg-chrono-green text-chrono-black">
+                    {galleryCount > 99 ? '99+' : galleryCount}
+                  </span>
+                )}
+              </button>
+              <button
                 onClick={() => setShowInfo(true)}
                 className="p-2 text-chrono-text-dim hover:text-chrono-blue transition-colors"
                 title="About"
@@ -112,6 +171,16 @@ export function Header({ onApiKeyChange }: HeaderProps) {
         onApiKeyChange={() => {
           setApiConfigured(isGeminiConfigured());
           onApiKeyChange?.();
+        }}
+      />
+
+      {/* Image Gallery Modal */}
+      <ImageGallery
+        isOpen={showGallery}
+        onClose={() => {
+          setShowGallery(false);
+          // Refresh count when closing
+          getGalleryCount().then(setGalleryCount);
         }}
       />
 

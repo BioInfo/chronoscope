@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useRef } from 'react';
 import {
   Compass,
   Mountain,
@@ -10,6 +10,7 @@ import {
   Sparkles,
 } from 'lucide-react';
 import { useChronoscope } from '../context/ChronoscopeContext';
+import { saveGalleryImage } from '../services/galleryService';
 import type { HazardLevel } from '../types';
 
 // Generate random stars for the background
@@ -88,6 +89,7 @@ export function Viewport() {
   const [compassRotation, setCompassRotation] = useState(0);
   const [showImage, setShowImage] = useState(true);
   const stars = useMemo(() => generateStars(50), []);
+  const lastSavedImage = useRef<string | null>(null);
 
   // Animate compass slightly
   useEffect(() => {
@@ -96,6 +98,28 @@ export function Viewport() {
     }, 100);
     return () => clearInterval(interval);
   }, []);
+
+  // Auto-save generated images to gallery
+  useEffect(() => {
+    const saveToGallery = async () => {
+      if (generatedImage && currentScene && generatedImage !== lastSavedImage.current) {
+        try {
+          await saveGalleryImage(
+            generatedImage,
+            currentScene.coordinates,
+            currentScene.locationName,
+            currentScene.description
+          );
+          lastSavedImage.current = generatedImage;
+          // Notify header to update gallery count
+          window.dispatchEvent(new Event('galleryUpdated'));
+        } catch (error) {
+          console.error('Failed to save image to gallery:', error);
+        }
+      }
+    };
+    saveToGallery();
+  }, [generatedImage, currentScene]);
 
   const hazardLevel = currentScene?.safety.hazardLevel || 'low';
   const colors = getHazardColors(hazardLevel);
