@@ -17,7 +17,7 @@
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind-4.1-06B6D4?style=flat-square&logo=tailwindcss&logoColor=white)](https://tailwindcss.com)
 [![Gemini AI](https://img.shields.io/badge/Gemini-3%20Pro-8E75B2?style=flat-square&logo=google&logoColor=white)](https://ai.google.dev)
 
-![Chronoscope Banner](https://via.placeholder.com/1200x400/1a1a2e/00d9ff?text=THE+CHRONOSCOPE+%E2%80%A2+TEMPORAL+RENDERING+ENGINE)
+![Chronoscope Banner](https://raw.githubusercontent.com/BioInfo/chronoscope/main/public/chronoscope-banner.png)
 
 [Features](#-features) • [Demo](#-demo) • [Installation](#-installation) • [Usage](#-usage) • [API](#-api-configuration) • [Contributing](#-contributing)
 
