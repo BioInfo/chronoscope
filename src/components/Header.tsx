@@ -5,9 +5,13 @@ import {
   Info,
   X,
   Github,
+  Share2,
+  Check,
 } from 'lucide-react';
 import { Settings } from './Settings';
 import { isGeminiConfigured } from '../services/geminiService';
+import { useChronoscope } from '../context/ChronoscopeContext';
+import { copyShareableUrl } from '../utils/urlManager';
 
 interface HeaderProps {
   onApiKeyChange?: () => void;
@@ -18,6 +22,17 @@ export function Header({ onApiKeyChange }: HeaderProps) {
   const [showInfo, setShowInfo] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [apiConfigured, setApiConfigured] = useState(isGeminiConfigured());
+  const [copied, setCopied] = useState(false);
+  const { state } = useChronoscope();
+
+  const handleShare = async () => {
+    if (!state.currentScene) return;
+    const success = await copyShareableUrl(state.currentScene.coordinates);
+    if (success) {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
 
   // Update real-world time every second
   useEffect(() => {
@@ -75,6 +90,20 @@ export function Header({ onApiKeyChange }: HeaderProps) {
 
             {/* Actions */}
             <div className="flex items-center gap-2">
+              <button
+                onClick={handleShare}
+                disabled={!state.currentScene}
+                className={`p-2 transition-colors ${
+                  state.currentScene
+                    ? copied
+                      ? 'text-chrono-green'
+                      : 'text-chrono-text-dim hover:text-chrono-blue'
+                    : 'text-chrono-text-dim/30 cursor-not-allowed'
+                }`}
+                title={copied ? 'Link copied!' : state.currentScene ? 'Share coordinates' : 'Render a scene first'}
+              >
+                {copied ? <Check className="w-5 h-5" /> : <Share2 className="w-5 h-5" />}
+              </button>
               <button
                 onClick={() => setShowInfo(true)}
                 className="p-2 text-chrono-text-dim hover:text-chrono-blue transition-colors"

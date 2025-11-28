@@ -1,11 +1,11 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import {
   PanelLeftClose,
   PanelLeftOpen,
   PanelRightClose,
   PanelRightOpen,
 } from 'lucide-react';
-import { ChronoscopeProvider } from './context/ChronoscopeContext';
+import { ChronoscopeProvider, useChronoscope } from './context/ChronoscopeContext';
 import {
   Header,
   ControlPlane,
@@ -13,6 +13,7 @@ import {
   DataStream,
   Waypoints,
 } from './components';
+import { getCoordinatesFromUrl, updateUrlWithCoordinates } from './utils/urlManager';
 
 interface ChronoscopeAppProps {
   onApiKeyChange: () => void;
@@ -22,6 +23,26 @@ function ChronoscopeApp({ onApiKeyChange }: ChronoscopeAppProps) {
   const [leftPanelOpen, setLeftPanelOpen] = useState(true);
   const [rightPanelOpen, setRightPanelOpen] = useState(true);
   const [mobileTab, setMobileTab] = useState<'controls' | 'viewport' | 'data'>('viewport');
+  const { state, setCoordinates, renderScene } = useChronoscope();
+
+  // Read URL coordinates on mount and auto-render
+  useEffect(() => {
+    const urlCoords = getCoordinatesFromUrl();
+    if (urlCoords) {
+      setCoordinates(urlCoords);
+      // Small delay to ensure state is set before rendering
+      setTimeout(() => {
+        renderScene();
+      }, 100);
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Update URL when scene is rendered
+  useEffect(() => {
+    if (state.currentScene) {
+      updateUrlWithCoordinates(state.currentScene.coordinates);
+    }
+  }, [state.currentScene]);
 
   return (
     <div className="min-h-screen bg-chrono-black flex flex-col">
