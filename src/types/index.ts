@@ -156,3 +156,13 @@ export interface TemporalJournal {
   entries: JournalEntry[];
   maxEntries: number;
 }
+
+// Image Gallery types (stored in IndexedDB)
+export interface GalleryImage {
+  id: string;
+  imageData: string; // base64 data URL
+  coordinates: SpacetimeCoordinates;
+  locationName: string;
+  description: string;
+  timestamp: number; // Unix timestamp when saved
+}
