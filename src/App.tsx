@@ -32,10 +32,8 @@ function ChronoscopeApp({ onApiKeyChange }: ChronoscopeAppProps) {
     const urlCoords = getCoordinatesFromUrl();
     if (urlCoords) {
       setCoordinates(urlCoords);
-      // Small delay to ensure state is set before rendering
-      setTimeout(() => {
-        renderScene();
-      }, 100);
+      // Pass coords directly to avoid stale closure issues
+      renderScene(urlCoords);
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 

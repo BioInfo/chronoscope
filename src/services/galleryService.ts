@@ -33,7 +33,7 @@ function getDB(): Promise<IDBPDatabase<GalleryDB>> {
 }
 
 /**
- * Save an image to the gallery
+ * Save an image to the gallery (with duplicate prevention)
  */
 export async function saveGalleryImage(
   imageData: string,
@@ -42,6 +42,15 @@ export async function saveGalleryImage(
   description: string
 ): Promise<GalleryImage> {
   const db = await getDB();
+
+  // Check if this exact image already exists
+  const existingImages = await db.getAll(STORE_NAME);
+  const duplicate = existingImages.find(img => img.imageData === imageData);
+
+  if (duplicate) {
+    // Return the existing image instead of creating a duplicate
+    return duplicate;
+  }
 
   const newImage: GalleryImage = {
     id: crypto.randomUUID(),

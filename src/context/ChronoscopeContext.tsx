@@ -77,7 +77,8 @@ function chronoscopeReducer(state: ChronoscopeState, action: ChronoscopeAction):
         isRendering: true,
         renderProgress: 0,
         error: null,
-        generatedImage: null,
+        // Don't clear generatedImage here - it will be cleared only when coordinates change
+        // or when a new scene is rendered with different coordinates
         imageError: null,
       };
 
@@ -87,13 +88,27 @@ function chronoscopeReducer(state: ChronoscopeState, action: ChronoscopeAction):
         renderProgress: action.payload,
       };
 
-    case 'COMPLETE_RENDER':
+    case 'COMPLETE_RENDER': {
+      // Check if coordinates changed - if so, clear the generated image
+      const coordinatesChanged =
+        !state.currentScene ||
+        state.currentScene.coordinates.spatial.latitude !== action.payload.coordinates.spatial.latitude ||
+        state.currentScene.coordinates.spatial.longitude !== action.payload.coordinates.spatial.longitude ||
+        state.currentScene.coordinates.temporal.year !== action.payload.coordinates.temporal.year ||
+        state.currentScene.coordinates.temporal.month !== action.payload.coordinates.temporal.month ||
+        state.currentScene.coordinates.temporal.day !== action.payload.coordinates.temporal.day ||
+        state.currentScene.coordinates.temporal.hour !== action.payload.coordinates.temporal.hour ||
+        state.currentScene.coordinates.temporal.minute !== action.payload.coordinates.temporal.minute;
+
       return {
         ...state,
         isRendering: false,
         renderProgress: 100,
         currentScene: action.payload,
+        // Clear image only if we're viewing a different location/time
+        generatedImage: coordinatesChanged ? null : state.generatedImage,
       };
+    }
 
     case 'START_IMAGE_GENERATION':
       return {
@@ -153,7 +168,7 @@ interface ChronoscopeContextType {
   setSpatialCoordinates: (coords: SpatialCoordinates) => void;
   setTemporalCoordinates: (coords: TemporalCoordinates) => void;
   setCoordinates: (coords: SpacetimeCoordinates) => void;
-  renderScene: () => void;
+  renderScene: (coords?: SpacetimeCoordinates) => void;
   jumpToWaypoint: (coords: SpacetimeCoordinates, previewData?: SceneData) => void;
   generateImage: () => Promise<void>;
   setViewport: (viewport: Partial<ChronoscopeState['viewport']>) => void;
@@ -179,15 +194,18 @@ export function ChronoscopeProvider({ children }: { children: ReactNode }) {
     dispatch({ type: 'SET_COORDINATES', payload: coords });
   }, []);
 
-  const renderScene = useCallback(() => {
+  const renderScene = useCallback((coords?: SpacetimeCoordinates) => {
+    // Use provided coords or fall back to inputCoordinates from state
+    const coordsToRender = coords || state.inputCoordinates;
+
     // Validate coordinates first
-    const spatialValidation = validateSpatialCoordinates(state.inputCoordinates.spatial);
+    const spatialValidation = validateSpatialCoordinates(coordsToRender.spatial);
     if (!spatialValidation.isValid) {
       dispatch({ type: 'SET_ERROR', payload: spatialValidation.error! });
       return;
     }
 
-    const temporalValidation = validateTemporalCoordinates(state.inputCoordinates.temporal);
+    const temporalValidation = validateTemporalCoordinates(coordsToRender.temporal);
     if (!temporalValidation.isValid) {
       dispatch({ type: 'SET_ERROR', payload: temporalValidation.error! });
       return;
@@ -201,7 +219,7 @@ export function ChronoscopeProvider({ children }: { children: ReactNode }) {
         dispatch({ type: 'UPDATE_RENDER_PROGRESS', payload: progress });
       },
       () => {
-        const scene = generateScene(state.inputCoordinates);
+        const scene = generateScene(coordsToRender);
         dispatch({ type: 'COMPLETE_RENDER', payload: scene });
       }
     );

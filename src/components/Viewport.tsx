@@ -100,6 +100,7 @@ export function Viewport() {
   }, []);
 
   // Auto-save generated images to gallery
+  // Only trigger when generatedImage changes, not when currentScene changes
   useEffect(() => {
     const saveToGallery = async () => {
       if (generatedImage && currentScene && generatedImage !== lastSavedImage.current) {
@@ -119,7 +120,7 @@ export function Viewport() {
       }
     };
     saveToGallery();
-  }, [generatedImage, currentScene]);
+  }, [generatedImage]); // Only depend on generatedImage to prevent duplicates
 
   const hazardLevel = currentScene?.safety.hazardLevel || 'low';
   const colors = getHazardColors(hazardLevel);
