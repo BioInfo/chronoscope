@@ -235,6 +235,10 @@ export async function generateHistoricalImage(
         ],
         generationConfig: {
           responseModalities: ['IMAGE'],
+          imageConfig: {
+            aspectRatio: '9:16',
+            imageSize: '2K',
+          },
         },
       }),
     });
