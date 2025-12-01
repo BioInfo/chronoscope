@@ -48,7 +48,7 @@ Add true temporal movement, not just jumping.
 | Feature | Status | Priority | Effort | Value | Notes |
 |---------|--------|----------|--------|-------|-------|
 | **Temporal Slider (Time-Lapse)** | 📋 | 🟠 | ⚡⚡⚡ | ⭐⭐⭐⭐⭐ | **KILLER FEATURE** - Slide through time at one location |
-| **Gemini Flash Chatbot** | 📋 | 🟠 | ⚡⚡ | ⭐⭐⭐⭐⭐ | Context-aware AI assistant for Q&A and feature help |
+| **Gemini Flash Chatbot** | 🚧 | 🟠 | ⚡⚡ | ⭐⭐⭐⭐⭐ | Context-aware AI assistant for Q&A and feature help |
 
 **Deliverables**:
 - Time-lapse mode with scrubbing
@@ -86,12 +86,71 @@ Future enhancements based on usage patterns.
 
 | Feature | Status | Priority | Effort | Value | Notes |
 |---------|--------|----------|--------|-------|-------|
+| **AI-Generated Dynamic Waypoints** | 💡 | 🟠 | ⚡⚡ | ⭐⭐⭐⭐⭐ | AI suggests ANY historical moment as clickable coordinates |
+| **Hyper-Realistic Image Generation** | 💡 | 🟠 | ⚡⚡ | ⭐⭐⭐⭐⭐ | Enhanced prompts for photorealistic "you are there" imagery |
 | **Compare Mode (Split View)** | 💡 | 🟢 | ⚡⚡⚡ | ⭐⭐⭐⭐ | Side-by-side comparison, different times |
 | **Real Historical Data** | 💡 | 🟢 | ⚡⚡⚡⚡ | ⭐⭐⭐⭐ | Replace simulated data with real records |
 | **Prompt Customization** | 💡 | 🟢 | ⚡⚡ | ⭐⭐⭐ | Advanced mode: tweak generation prompts |
 | **Astronomical Accuracy** | 💡 | 🟢 | ⚡⚡⚡ | ⭐⭐⭐ | Real sun/moon positions, accurate sky |
 | **Weather History Integration** | 💡 | 🟢 | ⚡⚡⚡ | ⭐⭐⭐ | Real historical weather data |
 | **Community Waypoints** | 💡 | 🟢 | ⚡⚡⚡⚡ | ⭐⭐⭐⭐ | User-submitted curated moments |
+
+### AI-Generated Dynamic Waypoints (HIGH PRIORITY)
+
+**Goal**: Allow the AI assistant to suggest ANY historical moment from its knowledge, not just curated waypoints.
+
+**Concept**: The LLM has vast knowledge of historical events with known locations and dates. Every suggestion becomes a clickable coordinate link that renders a new scene.
+
+**Examples of AI-Generated Suggestions**:
+- "You might enjoy witnessing the signing of the Magna Carta at [Runnymede, 1215](/?lat=51.4367&lng=-0.5650&year=1215&month=6&day=15&hour=12&minute=0)"
+- "Experience the first human-powered flight at [Kitty Hawk](/?lat=36.0176&lng=-75.6716&year=1903&month=12&day=17&hour=10&minute=35)"
+- "See the construction of the Colosseum in [Rome, 80 AD](/?lat=41.8902&lng=12.4922&year=80&month=3&day=1&hour=10&minute=0)"
+
+**Implementation**:
+1. Update AI context to encourage generating coordinate links for ANY historical event it knows
+2. AI extracts lat/lng from its knowledge of famous locations
+3. AI constructs proper URL format: `/?lat=X&lng=Y&year=Z&month=M&day=D&hour=H&minute=MM`
+4. User clicks link → page navigates → scene renders → AI greets them at new location
+
+**Value**: Transforms the app from 8 curated waypoints to INFINITE explorable moments. The AI becomes a knowledgeable time-travel guide who can take you anywhere in history.
+
+**User Experience**:
+- User: "I'm interested in ancient Rome"
+- AI: "Let me take you to some incredible moments! Visit [Julius Caesar's assassination](/?lat=41.8925&lng=12.4769&year=-44&month=3&day=15&hour=11&minute=0) at the Theatre of Pompey, or witness [Nero's Great Fire](/?lat=41.8902&lng=12.4853&year=64&month=7&day=19&hour=22&minute=0) engulfing the city..."
+
+---
+
+### Hyper-Realistic Image Generation Details
+
+**Goal**: Transform generated images from "artistic interpretations" to "you were there" photorealistic moments.
+
+**Current Issue**: Images appear cartoonish/illustrated rather than photorealistic documentary-style.
+
+**Proposed Enhancements**:
+1. **Enhanced Prompt Engineering**: Add specific photorealism directives
+   - "Ultra-high resolution DSLR photograph"
+   - "RAW photo, unedited, natural lighting"
+   - "Documentary photography style, not illustrated"
+   - "Film grain appropriate to era (Kodachrome for 1960s, daguerreotype for 1800s)"
+
+2. **Era-Specific Photography Styles**:
+   - Pre-1900: Sepia/B&W, period-appropriate blur and exposure
+   - 1900-1950: Early color film look, Autochrome/Kodachrome grain
+   - 1950-1980: Saturated film stock, period-accurate color science
+   - 1980-2000: Consumer camera aesthetic
+   - 2000+: Modern digital photography quality
+
+3. **Environmental Realism**:
+   - Atmospheric haze and dust particles
+   - Period-accurate pollution/smog levels
+   - Weather effects (rain drops on lens, snow accumulation)
+   - Time-of-day accurate shadows and sun position
+   - Authentic crowd density and clothing details
+
+4. **Negative Prompts**: Explicitly exclude
+   - "painting, illustration, cartoon, CGI, render"
+   - "artistic interpretation, stylized"
+   - "perfect lighting, studio lighting"
 
 ---
 

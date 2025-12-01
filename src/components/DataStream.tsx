@@ -139,7 +139,7 @@ export function DataStream() {
   const { environment, anthropology, safety } = currentScene;
 
   return (
-    <div className="panel-chrono p-4 space-y-6 overflow-y-auto max-h-[calc(100vh-2rem)] lg:max-h-none">
+    <div className="panel-chrono p-4 space-y-6">
       {/* Header */}
       <div className="flex items-center gap-2 border-b border-chrono-border pb-3">
         <Activity className="w-5 h-5 text-chrono-green" />

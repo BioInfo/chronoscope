@@ -167,3 +167,16 @@ export interface GalleryImage {
   description: string;
   timestamp: number; // Unix timestamp when saved
 }
+
+// Chat/Temporal Assistant types
+export interface ChatMessage {
+  role: 'user' | 'model';
+  content: string;
+  timestamp: number;
+}
+
+export interface ChatState {
+  messages: ChatMessage[];
+  isLoading: boolean;
+  error: string | null;
+}
