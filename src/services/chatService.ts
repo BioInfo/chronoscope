@@ -270,10 +270,38 @@ export async function sendChatMessage(
 }
 
 /**
+ * Check if a location name is just coordinates (contains ° symbol)
+ */
+function isCoordinateString(name: string): boolean {
+  return name.includes('°');
+}
+
+/**
+ * Get a human-readable location reference for suggested questions
+ */
+function getReadableLocation(sceneData: SceneData): string | null {
+  const { locationName, anthropology } = sceneData;
+
+  // If locationName is a real place name (not coordinates), use it
+  if (locationName && !isCoordinateString(locationName) && !locationName.includes('Unknown')) {
+    return locationName.split(',')[0];
+  }
+
+  // Otherwise use civilization if it's meaningful
+  if (anthropology.civilization &&
+      anthropology.civilization !== 'Unknown' &&
+      anthropology.civilization !== 'Uninhabited') {
+    return `the ${anthropology.civilization} region`;
+  }
+
+  return null;
+}
+
+/**
  * Suggested questions based on scene data
  */
 export function getSuggestedQuestions(sceneData: SceneData): string[] {
-  const { anthropology, safety, coordinates, locationName } = sceneData;
+  const { anthropology, safety, coordinates } = sceneData;
   const suggestions: string[] = [];
 
   // Always prioritize dynamic waypoint discovery
@@ -284,9 +312,10 @@ export function getSuggestedQuestions(sceneData: SceneData): string[] {
     suggestions.push(`What was daily life like during the ${anthropology.technologyLevel} era?`);
   }
 
-  // Location-specific exploration
-  if (locationName && !locationName.includes('Unknown')) {
-    suggestions.push(`What other historical events happened near ${locationName.split(',')[0]}?`);
+  // Location-specific exploration - only if we have a readable location
+  const readableLocation = getReadableLocation(sceneData);
+  if (readableLocation) {
+    suggestions.push(`What other historical events happened near ${readableLocation}?`);
   }
 
   // Event-specific
