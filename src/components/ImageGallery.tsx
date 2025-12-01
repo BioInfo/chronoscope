@@ -17,6 +17,7 @@ import {
   clearGallery,
   estimateStorageUsage,
   downloadImage,
+  deduplicateGallery,
 } from '../services/galleryService';
 import { useChronoscope } from '../context/ChronoscopeContext';
 import { formatYear } from '../utils/validation';
@@ -209,6 +210,14 @@ export function ImageGallery({ isOpen, onClose }: ImageGalleryProps) {
   const loadImages = async () => {
     setLoading(true);
     try {
+      // Clean up any existing duplicates first
+      const removed = await deduplicateGallery();
+      if (removed > 0) {
+        console.log(`Removed ${removed} duplicate image(s) from gallery`);
+        // Notify header to update count
+        window.dispatchEvent(new Event('galleryUpdated'));
+      }
+
       const galleryImages = await getAllGalleryImages();
       setImages(galleryImages);
       const storage = await estimateStorageUsage();

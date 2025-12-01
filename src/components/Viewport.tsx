@@ -90,6 +90,7 @@ export function Viewport() {
   const [showImage, setShowImage] = useState(true);
   const stars = useMemo(() => generateStars(50), []);
   const lastSavedImage = useRef<string | null>(null);
+  const isSaving = useRef(false);
 
   // Animate compass slightly
   useEffect(() => {
@@ -100,27 +101,40 @@ export function Viewport() {
   }, []);
 
   // Auto-save generated images to gallery
-  // Only trigger when generatedImage changes, not when currentScene changes
+  // Uses multiple guards to prevent duplicate saves:
+  // 1. lastSavedImage ref - tracks what was last saved
+  // 2. isSaving ref - prevents concurrent save attempts
+  // 3. galleryService mutex - final safety net for race conditions
   useEffect(() => {
+    // Skip if no image, no scene, already saved, or currently saving
+    if (!generatedImage || !currentScene) return;
+    if (generatedImage === lastSavedImage.current) return;
+    if (isSaving.current) return;
+
+    // Mark as saving SYNCHRONOUSLY before async operation
+    isSaving.current = true;
+    lastSavedImage.current = generatedImage;
+
     const saveToGallery = async () => {
-      if (generatedImage && currentScene && generatedImage !== lastSavedImage.current) {
-        try {
-          await saveGalleryImage(
-            generatedImage,
-            currentScene.coordinates,
-            currentScene.locationName,
-            currentScene.description
-          );
-          lastSavedImage.current = generatedImage;
-          // Notify header to update gallery count
-          window.dispatchEvent(new Event('galleryUpdated'));
-        } catch (error) {
-          console.error('Failed to save image to gallery:', error);
-        }
+      try {
+        await saveGalleryImage(
+          generatedImage,
+          currentScene.coordinates,
+          currentScene.locationName,
+          currentScene.description
+        );
+        // Notify header to update gallery count
+        window.dispatchEvent(new Event('galleryUpdated'));
+      } catch (error) {
+        console.error('Failed to save image to gallery:', error);
+        // Reset on error so retry is possible
+        lastSavedImage.current = null;
+      } finally {
+        isSaving.current = false;
       }
     };
     saveToGallery();
-  }, [generatedImage]); // Only depend on generatedImage to prevent duplicates
+  }, [generatedImage, currentScene]); // Include currentScene for proper cleanup
 
   const hazardLevel = currentScene?.safety.hazardLevel || 'low';
   const colors = getHazardColors(hazardLevel);

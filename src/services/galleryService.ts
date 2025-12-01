@@ -5,15 +5,33 @@ interface GalleryDB extends DBSchema {
   images: {
     key: string;
     value: GalleryImage;
-    indexes: { 'by-timestamp': number };
+    indexes: {
+      'by-timestamp': number;
+      'by-fingerprint': string;
+    };
   };
 }
 
 const DB_NAME = 'chronoscope-gallery';
-const DB_VERSION = 1;
+const DB_VERSION = 2; // Bump version for new index
 const STORE_NAME = 'images';
 
 let dbPromise: Promise<IDBPDatabase<GalleryDB>> | null = null;
+
+// Mutex lock to prevent concurrent saves
+let saveLock: Promise<void> = Promise.resolve();
+
+/**
+ * Generate a fingerprint for duplicate detection
+ * Uses first 100 chars of image data + coordinates for fast comparison
+ */
+function generateFingerprint(imageData: string, coordinates: SpacetimeCoordinates): string {
+  const { spatial, temporal } = coordinates;
+  const coordKey = `${spatial.latitude.toFixed(4)}_${spatial.longitude.toFixed(4)}_${temporal.year}_${temporal.month}_${temporal.day}_${temporal.hour}_${temporal.minute}`;
+  // Use first 100 chars of image data as partial hash (enough for uniqueness)
+  const imagePrefix = imageData.substring(0, 100);
+  return `${coordKey}_${imagePrefix}`;
+}
 
 /**
  * Get or initialize the database connection
@@ -21,10 +39,18 @@ let dbPromise: Promise<IDBPDatabase<GalleryDB>> | null = null;
 function getDB(): Promise<IDBPDatabase<GalleryDB>> {
   if (!dbPromise) {
     dbPromise = openDB<GalleryDB>(DB_NAME, DB_VERSION, {
-      upgrade(db) {
+      upgrade(db, oldVersion, _newVersion, transaction) {
+        // Handle fresh install
         if (!db.objectStoreNames.contains(STORE_NAME)) {
           const store = db.createObjectStore(STORE_NAME, { keyPath: 'id' });
           store.createIndex('by-timestamp', 'timestamp');
+          store.createIndex('by-fingerprint', 'fingerprint', { unique: true });
+        } else if (oldVersion < 2) {
+          // Migrate from v1 to v2: add fingerprint index
+          const store = transaction.objectStore(STORE_NAME);
+          if (!store.indexNames.contains('by-fingerprint')) {
+            store.createIndex('by-fingerprint', 'fingerprint', { unique: true });
+          }
         }
       },
     });
@@ -33,7 +59,8 @@ function getDB(): Promise<IDBPDatabase<GalleryDB>> {
 }
 
 /**
- * Save an image to the gallery (with duplicate prevention)
+ * Save an image to the gallery (with robust duplicate prevention)
+ * Uses mutex lock + fingerprint index to prevent race conditions and duplicates
  */
 export async function saveGalleryImage(
   imageData: string,
@@ -41,28 +68,52 @@ export async function saveGalleryImage(
   locationName: string,
   description: string
 ): Promise<GalleryImage> {
-  const db = await getDB();
+  // Wait for any pending save to complete (mutex)
+  const currentLock = saveLock;
+  let releaseLock: () => void;
+  saveLock = new Promise(resolve => { releaseLock = resolve; });
 
-  // Check if this exact image already exists
-  const existingImages = await db.getAll(STORE_NAME);
-  const duplicate = existingImages.find(img => img.imageData === imageData);
+  await currentLock;
 
-  if (duplicate) {
-    // Return the existing image instead of creating a duplicate
-    return duplicate;
+  try {
+    const db = await getDB();
+    const fingerprint = generateFingerprint(imageData, coordinates);
+
+    // Check for duplicate using the fingerprint index (fast O(1) lookup)
+    try {
+      const existing = await db.getFromIndex(STORE_NAME, 'by-fingerprint', fingerprint);
+      if (existing) {
+        // Return existing image instead of creating duplicate
+        return existing;
+      }
+    } catch {
+      // Index might not exist on older databases, fall back to full scan
+      const existingImages = await db.getAll(STORE_NAME);
+      const duplicate = existingImages.find(img =>
+        (img as GalleryImage & { fingerprint?: string }).fingerprint === fingerprint ||
+        img.imageData === imageData
+      );
+      if (duplicate) {
+        return duplicate;
+      }
+    }
+
+    const newImage: GalleryImage & { fingerprint: string } = {
+      id: crypto.randomUUID(),
+      imageData,
+      coordinates,
+      locationName,
+      description,
+      timestamp: Date.now(),
+      fingerprint,
+    };
+
+    await db.add(STORE_NAME, newImage as unknown as GalleryImage);
+    return newImage;
+  } finally {
+    // Release the lock
+    releaseLock!();
   }
-
-  const newImage: GalleryImage = {
-    id: crypto.randomUUID(),
-    imageData,
-    coordinates,
-    locationName,
-    description,
-    timestamp: Date.now(),
-  };
-
-  await db.add(STORE_NAME, newImage);
-  return newImage;
 }
 
 /**
@@ -172,4 +223,40 @@ export function formatCoordinatesDisplay(coordinates: SpacetimeCoordinates): str
     temporal.year < 0 ? `${Math.abs(temporal.year)} BC` : `${temporal.year} AD`;
 
   return `${lat}°, ${lng}° | ${temporal.month}/${temporal.day}/${year}`;
+}
+
+/**
+ * Remove duplicate images from the gallery
+ * Keeps the oldest version of each duplicate (first saved)
+ * Returns the number of duplicates removed
+ */
+export async function deduplicateGallery(): Promise<number> {
+  const db = await getDB();
+  const images = await db.getAll(STORE_NAME);
+
+  // Group by imageData (or first 1000 chars for performance)
+  const seen = new Map<string, GalleryImage>();
+  const duplicateIds: string[] = [];
+
+  // Sort by timestamp ascending (oldest first)
+  images.sort((a, b) => a.timestamp - b.timestamp);
+
+  for (const image of images) {
+    // Use first 1000 chars of imageData as key for grouping
+    const key = image.imageData.substring(0, 1000);
+
+    if (seen.has(key)) {
+      // This is a duplicate - mark for deletion
+      duplicateIds.push(image.id);
+    } else {
+      seen.set(key, image);
+    }
+  }
+
+  // Delete duplicates
+  for (const id of duplicateIds) {
+    await db.delete(STORE_NAME, id);
+  }
+
+  return duplicateIds.length;
 }
