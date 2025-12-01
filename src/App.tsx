@@ -13,6 +13,7 @@ import {
   DataStream,
   Waypoints,
   TemporalJournal,
+  TemporalAssistant,
 } from './components';
 import { getCoordinatesFromUrl, updateUrlWithCoordinates } from './utils/urlManager';
 import { addJournalEntry } from './utils/temporalJournal';
@@ -99,14 +100,14 @@ function ChronoscopeApp({ onApiKeyChange }: ChronoscopeAppProps) {
         <div
           className={`
             flex flex-col border-l border-chrono-border bg-chrono-dark/30
-            transition-all duration-300 ease-out
+            transition-all duration-300 ease-out overflow-hidden
             ${rightPanelOpen ? 'w-80' : 'w-12'}
           `}
         >
           {/* Panel Toggle */}
           <button
             onClick={() => setRightPanelOpen(!rightPanelOpen)}
-            className="p-3 text-chrono-text-dim hover:text-chrono-blue transition-colors border-b border-chrono-border"
+            className="p-3 text-chrono-text-dim hover:text-chrono-blue transition-colors border-b border-chrono-border flex-shrink-0"
           >
             {rightPanelOpen ? (
               <PanelRightClose className="w-5 h-5" />
@@ -117,8 +118,9 @@ function ChronoscopeApp({ onApiKeyChange }: ChronoscopeAppProps) {
 
           {/* Panel Content */}
           {rightPanelOpen && (
-            <div className="flex-1 overflow-y-auto p-4">
+            <div className="flex-1 overflow-y-auto p-4 space-y-4">
               <DataStream />
+              <TemporalAssistant />
             </div>
           )}
         </div>
@@ -170,7 +172,12 @@ function ChronoscopeApp({ onApiKeyChange }: ChronoscopeAppProps) {
             </div>
           )}
           {mobileTab === 'viewport' && <Viewport />}
-          {mobileTab === 'data' && <DataStream />}
+          {mobileTab === 'data' && (
+            <div className="space-y-4">
+              <DataStream />
+              <TemporalAssistant />
+            </div>
+          )}
         </div>
       </div>
 

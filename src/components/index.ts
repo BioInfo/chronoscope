@@ -6,3 +6,4 @@ export { Waypoints } from './Waypoints';
 export { Settings } from './Settings';
 export { TemporalJournal } from './TemporalJournal';
 export { ImageGallery } from './ImageGallery';
+export { TemporalAssistant } from './TemporalAssistant';
