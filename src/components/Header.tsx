@@ -254,7 +254,7 @@ export function Header({ onApiKeyChange }: HeaderProps) {
                 <span className="font-mono text-xs">Source Code</span>
               </a>
               <span className="font-mono text-xs text-chrono-text-dim">
-                v1.0.0
+                v1.3.0
               </span>
             </div>
           </div>

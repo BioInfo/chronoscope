@@ -186,7 +186,7 @@ function ChronoscopeApp({ onApiKeyChange }: ChronoscopeAppProps) {
         <div className="flex items-center justify-between max-w-[1920px] mx-auto">
           <div className="flex items-center gap-4">
             <span className="font-mono text-xs text-chrono-text-dim">
-              CHRONOSCOPE v1.0.0
+              CHRONOSCOPE v1.3.0
             </span>
             <span className="hidden sm:inline font-mono text-xs text-chrono-text-dim">
               |
