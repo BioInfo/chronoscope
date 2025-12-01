@@ -31,7 +31,7 @@
 
 - **4D Navigation System** - Navigate through spacetime using precise spatial (latitude/longitude) and temporal (year/month/day/hour) coordinates
 - **Historical Scene Rendering** - Algorithmically generates rich historical context including environmental conditions, anthropological data, and safety metrics
-- **Curated Waypoints** - 8 pivotal moments in history from Pompeii (79 AD) to the Fall of the Berlin Wall (1989)
+- **Curated Waypoints** - 8 pivotal moments in history from the Great Pyramid (2560 BC) to the Fall of the Berlin Wall (1989)
 - **AI Image Generation** - Photorealistic historical scene generation powered by Google Gemini 3 Pro Image
 - **Responsive Design** - Seamless experience across desktop, tablet, and mobile devices
 - **Real-time Data Visualization** - Detailed metrics including weather, population density, technology era, and hazard levels
@@ -55,10 +55,13 @@ Visit the live application: **[chronoscope-amber.vercel.app](https://chronoscope
 | Location | Date | Significance |
 |----------|------|--------------|
 | 🚀 **Sea of Tranquility** | July 20, 1969 | First human landing on the Moon |
-| 🌋 **Pompeii** | August 24, 79 AD | Vesuvius eruption destroys Roman city |
-| ☢️ **Hiroshima** | August 6, 1945 | First atomic bomb deployment |
 | ✈️ **Kitty Hawk** | December 17, 1903 | Wright Brothers' first powered flight |
 | 🧱 **Berlin** | November 9, 1989 | Fall of the Berlin Wall |
+| 🎵 **Woodstock** | August 16, 1969 | Iconic music festival |
+| 📜 **Philadelphia** | July 4, 1776 | Declaration of Independence signed |
+| 🔺 **Giza** | 2560 BC | Great Pyramid nearing completion |
+| ✊ **Washington D.C.** | August 28, 1963 | MLK's "I Have a Dream" speech |
+| 🧭 **Spain** | September 6, 1522 | First circumnavigation of Earth completed |
 
 ---
 

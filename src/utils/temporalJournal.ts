@@ -16,8 +16,8 @@ export function getJournal(): TemporalJournal {
         maxEntries: parsed.maxEntries || MAX_ENTRIES,
       };
     }
-  } catch (e) {
-    console.error('Failed to load journal:', e);
+  } catch {
+    // Failed to load journal - return empty
   }
   return { entries: [], maxEntries: MAX_ENTRIES };
 }
@@ -28,8 +28,8 @@ export function getJournal(): TemporalJournal {
 function saveJournal(journal: TemporalJournal): void {
   try {
     localStorage.setItem(JOURNAL_KEY, JSON.stringify(journal));
-  } catch (e) {
-    console.error('Failed to save journal:', e);
+  } catch {
+    // Failed to save journal - localStorage may be unavailable
   }
 }
 

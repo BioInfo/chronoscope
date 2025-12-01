@@ -213,8 +213,7 @@ export function ImageGallery({ isOpen, onClose }: ImageGalleryProps) {
       // Clean up any existing duplicates first
       const removed = await deduplicateGallery();
       if (removed > 0) {
-        console.log(`Removed ${removed} duplicate image(s) from gallery`);
-        // Notify header to update count
+        // Notify header to update count after removing duplicates
         window.dispatchEvent(new Event('galleryUpdated'));
       }
 
@@ -222,8 +221,8 @@ export function ImageGallery({ isOpen, onClose }: ImageGalleryProps) {
       setImages(galleryImages);
       const storage = await estimateStorageUsage();
       setStorageInfo(storage.formatted);
-    } catch (error) {
-      console.error('Failed to load gallery:', error);
+    } catch {
+      // Failed to load gallery - will show empty state
     } finally {
       setLoading(false);
     }

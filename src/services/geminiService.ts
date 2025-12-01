@@ -8,6 +8,10 @@ const GEMINI_API_BASE = 'https://generativelanguage.googleapis.com/v1beta/models
 // LocalStorage key for API key
 const API_KEY_STORAGE_KEY = 'chronoscope_gemini_api_key';
 
+// Rate limiting - minimum 3 seconds between API calls
+const MIN_CALL_INTERVAL_MS = 3000;
+let lastApiCallTime = 0;
+
 interface GeminiResponse {
   candidates?: Array<{
     content?: {
@@ -47,8 +51,8 @@ export function saveApiKey(apiKey: string): void {
     } else {
       localStorage.removeItem(API_KEY_STORAGE_KEY);
     }
-  } catch (e) {
-    console.error('Failed to save API key:', e);
+  } catch {
+    // Silently fail - localStorage may be unavailable
   }
 }
 
@@ -58,8 +62,8 @@ export function saveApiKey(apiKey: string): void {
 export function clearApiKey(): void {
   try {
     localStorage.removeItem(API_KEY_STORAGE_KEY);
-  } catch (e) {
-    console.error('Failed to clear API key:', e);
+  } catch {
+    // Silently fail - localStorage may be unavailable
   }
 }
 
@@ -213,6 +217,17 @@ export async function generateHistoricalImage(
       error: 'Gemini API key not configured. Please add your API key in Settings.',
     };
   }
+
+  // Rate limiting check
+  const now = Date.now();
+  if (now - lastApiCallTime < MIN_CALL_INTERVAL_MS) {
+    const waitTime = Math.ceil((MIN_CALL_INTERVAL_MS - (now - lastApiCallTime)) / 1000);
+    return {
+      success: false,
+      error: `Please wait ${waitTime} second${waitTime > 1 ? 's' : ''} before generating another image.`,
+    };
+  }
+  lastApiCallTime = now;
 
   const prompt = generateHistoricalPrompt(coordinates, sceneData);
   const apiUrl = `${GEMINI_API_BASE}/${GEMINI_MODEL_ID}:generateContent`;

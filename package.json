@@ -1,7 +1,28 @@
 {
   "name": "chronoscope",
-  "version": "1.0.0",
-  "description": "The Chronoscope - A Temporal Rendering Engine",
+  "version": "1.1.0",
+  "description": "The Chronoscope - A Temporal Rendering Engine for historical exploration through 4D spacetime navigation",
+  "author": "Justin Johnson <github@bioinfo.dev>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/BioInfo/chronoscope.git"
+  },
+  "homepage": "https://chronoscope-amber.vercel.app",
+  "bugs": {
+    "url": "https://github.com/BioInfo/chronoscope/issues"
+  },
+  "keywords": [
+    "chronoscope",
+    "time-travel",
+    "historical",
+    "spacetime",
+    "react",
+    "typescript",
+    "gemini",
+    "ai-image-generation",
+    "visualization"
+  ],
   "type": "module",
   "scripts": {
     "dev": "vite",

@@ -43,6 +43,7 @@ export type WeatherCondition =
   | 'Stormy'
   | 'Snowy'
   | 'Foggy'
+  | 'Hot'
   | 'Volcanic Ash'
   | 'Nuclear Fallout'
   | 'Vacuum'

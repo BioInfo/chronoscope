@@ -125,9 +125,8 @@ export function Viewport() {
         );
         // Notify header to update gallery count
         window.dispatchEvent(new Event('galleryUpdated'));
-      } catch (error) {
-        console.error('Failed to save image to gallery:', error);
-        // Reset on error so retry is possible
+      } catch {
+        // Failed to save - reset so retry is possible
         lastSavedImage.current = null;
       } finally {
         isSaving.current = false;

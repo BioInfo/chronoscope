@@ -89,8 +89,9 @@ Key function: `generateHistoricalImage()` - takes SceneData and returns photorea
 ### Curated Waypoints (`src/data/waypoints.ts`)
 
 8 pre-configured historical moments with complete SceneData:
-- Hiroshima (1945), Apollo 11 (1969), Pompeii (79 AD), Kitty Hawk (1903)
-- Berlin Wall (1989), Woodstock (1969), Titanic (1912), JFK Assassination (1963)
+- Apollo 11 Landing (1969), First Flight at Kitty Hawk (1903), Berlin Wall Falls (1989)
+- Woodstock Festival (1969), Independence Day (1776), Great Pyramid Construction (2560 BC)
+- MLK's "I Have a Dream" Speech (1963), First Circumnavigation of Earth (1522)
 
 Each waypoint includes coordinates, preview data, category, and icon for quick navigation.
 

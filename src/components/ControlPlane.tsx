@@ -178,7 +178,7 @@ export function ControlPlane() {
           <span className="font-mono text-xs uppercase tracking-wider">Temporal Coordinates</span>
         </div>
 
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-[1fr_0.7fr_0.7fr] gap-3">
           <CoordinateInput
             label="Year"
             value={localTemporal.year}

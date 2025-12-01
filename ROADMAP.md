@@ -198,7 +198,8 @@ Track these KPIs to guide future development:
 | 1.0.0 | 2025-11-28 | Initial app launch with core features |
 | 1.1.0 | 2025-11-28 | Phase 1: Essential UX (sharing, history, gallery) ✅ |
 | 1.1.1 | 2025-11-28 | Bug fixes: URL sharing coordinates, image display persistence, gallery deduplication ✅ |
-| 1.2.0 | TBD | Phase 2: Temporal navigation (slider, chat) |
+| 1.2.0 | 2025-12-01 | Security hardening, refreshed waypoints, UI improvements ✅ |
+| 1.3.0 | TBD | Phase 2: Temporal navigation (slider, chat) |
 | 2.0.0 | TBD | Phase 3: Enhanced discovery |
 
 ---
@@ -232,7 +233,27 @@ Open an issue with:
 
 ---
 
-## Recent Updates (v1.1.1 - 2025-11-28)
+## Recent Updates (v1.2.0 - 2025-12-01)
+
+### Security Hardening
+- **Content Security Policy**: Added comprehensive CSP headers to prevent XSS attacks
+- **Security Headers**: Added X-Content-Type-Options, X-Frame-Options, Referrer-Policy
+- **API Rate Limiting**: Added 3-second minimum between image generation requests
+- **Source Maps Disabled**: Production builds no longer expose source code
+- **Input Validation**: Added maxLength to API key input field
+- **Console Cleanup**: Removed all console.log statements from production code
+
+### Content Updates
+- **Refreshed Waypoints**: Replaced controversial historical moments with inspiring achievements
+  - Removed: Hiroshima, Pompeii, Titanic, JFK assassination
+  - Added: Independence Day (1776), Great Pyramid (2560 BC), MLK "I Have a Dream" (1963), First Circumnavigation (1522)
+
+### UI Improvements
+- **Year Input Field**: Widened to display full 4-digit years without truncation
+
+---
+
+## Previous Updates (v1.1.1 - 2025-11-28)
 
 ### Bug Fixes
 - **URL Sharing**: Fixed coordinate encoding to use actual scene coordinates instead of default values
@@ -244,4 +265,4 @@ Open an issue with:
 - Added smart coordinate comparison in reducer to preserve images when appropriate
 - Enhanced `saveGalleryImage()` with duplicate detection using image data comparison
 
-*Last updated: 2025-11-28*
+*Last updated: 2025-12-01*
