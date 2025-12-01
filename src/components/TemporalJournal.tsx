@@ -98,13 +98,28 @@ function JournalEntryCard({ entry, onSelect, onDelete, isSelected }: JournalEntr
   );
 }
 
+// Toast notification state
+interface ToastState {
+  message: string;
+  type: 'success' | 'error';
+}
+
 export function TemporalJournal() {
   const { jumpToWaypoint } = useChronoscope();
   const [entries, setEntries] = useState<JournalEntry[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [isExpanded, setIsExpanded] = useState(true);
   const [showConfirmClear, setShowConfirmClear] = useState(false);
+  const [toast, setToast] = useState<ToastState | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Auto-dismiss toast after 3 seconds
+  useEffect(() => {
+    if (toast) {
+      const timer = setTimeout(() => setToast(null), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [toast]);
 
   // Load journal entries on mount and listen for updates
   useEffect(() => {
@@ -159,15 +174,48 @@ export function TemporalJournal() {
       const count = await importJournal(file);
       const journal = getJournal();
       setEntries(journal.entries);
-      alert(`Imported ${count} new entries`);
+      setToast({
+        message: count > 0 ? `Imported ${count} new entries` : 'No new entries to import',
+        type: 'success',
+      });
     } catch (error) {
-      alert('Failed to import journal. Please check the file format.');
+      setToast({
+        message: 'Failed to import journal. Check file format.',
+        type: 'error',
+      });
     }
 
     // Reset file input
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
+  };
+
+  // Toast notification component
+  const ToastNotification = () => {
+    if (!toast) return null;
+
+    const isError = toast.type === 'error';
+    return (
+      <div
+        className={`
+          flex items-center gap-2 px-3 py-2 rounded text-xs font-mono
+          animate-in fade-in slide-in-from-top-1 duration-200
+          ${isError
+            ? 'bg-chrono-red/20 border border-chrono-red/50 text-chrono-red'
+            : 'bg-chrono-green/20 border border-chrono-green/50 text-chrono-green'
+          }
+        `}
+      >
+        <span>{toast.message}</span>
+        <button
+          onClick={() => setToast(null)}
+          className="ml-auto p-0.5 hover:opacity-70"
+        >
+          <X className="w-3 h-3" />
+        </button>
+      </div>
+    );
   };
 
   if (entries.length === 0) {
@@ -180,6 +228,9 @@ export function TemporalJournal() {
             Temporal Journal
           </h2>
         </div>
+
+        {/* Toast notification */}
+        <ToastNotification />
 
         {/* Empty state */}
         <div className="text-center py-6">
@@ -235,6 +286,9 @@ export function TemporalJournal() {
           <ChevronDown className="w-4 h-4 text-chrono-text-dim" />
         )}
       </button>
+
+      {/* Toast notification */}
+      <ToastNotification />
 
       {isExpanded && (
         <>
