@@ -40,42 +40,43 @@ These features make the current experience sticky and shareable.
 
 ---
 
-## 🟠 Phase 2: Temporal Navigation
-*Timeline: 3-5 days | Priority: HIGH*
+## ✅ Phase 2: Temporal Assistant
+*Timeline: 1 day | Priority: HIGH | **COMPLETED***
 
-Add true temporal movement, not just jumping.
+AI-powered exploration with dynamic waypoint generation.
 
 | Feature | Status | Priority | Effort | Value | Notes |
 |---------|--------|----------|--------|-------|-------|
-| **Temporal Slider (Time-Lapse)** | 📋 | 🟠 | ⚡⚡⚡ | ⭐⭐⭐⭐⭐ | **KILLER FEATURE** - Slide through time at one location |
-| **Gemini Flash Chatbot** | 🚧 | 🟠 | ⚡⚡ | ⭐⭐⭐⭐⭐ | Context-aware AI assistant for Q&A and feature help |
+| **Gemini Flash Chatbot** | ✅ | 🟠 | ⚡⚡ | ⭐⭐⭐⭐⭐ | Context-aware AI assistant for Q&A and exploration |
+| **AI-Generated Dynamic Waypoints** | ✅ | 🟠 | ⚡ | ⭐⭐⭐⭐⭐ | Chat generates clickable links to ANY historical moment |
+| **Temporal Slider (Time-Lapse)** | 📋 | 🟡 | ⚡⚡⚡ | ⭐⭐⭐⭐ | Moved to Phase 3 - Slide through time at one location |
 
 **Deliverables**:
-- Time-lapse mode with scrubbing
-- Frame caching system
-- Export as GIF/video
-- Chat panel below Data Stream
-- Context injection for AI
-- Quick action buttons
+- ✅ Chat panel below Data Stream
+- ✅ Context injection for AI (scene data, coordinates, era)
+- ✅ Quick action buttons with suggested questions
+- ✅ Dynamic waypoint link generation with real coordinates
+- ✅ Clickable links transport users to any historical moment
 
 ---
 
-## 🟡 Phase 3: Enhanced Discovery
-*Timeline: 2-3 days | Priority: MEDIUM*
+## 🟡 Phase 3: Enhanced Discovery & Time-Lapse
+*Timeline: 1 week | Priority: MEDIUM*
 
-Help users find and understand interesting moments.
+Help users find interesting moments and explore temporal progression.
 
 | Feature | Status | Priority | Effort | Value | Notes |
 |---------|--------|----------|--------|-------|-------|
+| **Temporal Slider (Time-Lapse)** | 📋 | 🟡 | ⚡⚡⚡ | ⭐⭐⭐⭐ | Slide through time at one location, generate frames |
 | **Historical Event Integration** | 💡 | 🟡 | ⚡⚡⚡ | ⭐⭐⭐⭐ | Real events from Wikipedia/Wikidata API |
 | **Random Discovery Mode** | 💡 | 🟡 | ⚡⚡ | ⭐⭐⭐ | "Surprise Me" with smart random generation |
-| **Nearby Moments Suggestions** | 💡 | 🟡 | ⚡⚡ | ⭐⭐⭐ | Show related historical moments |
 
 **Deliverables**:
+- Time-lapse mode with year scrubbing slider
+- Frame caching system for performance
+- Export as GIF functionality
 - Event API integration
-- Context cards in Data Stream
 - Random discovery algorithm
-- Suggestion engine
 
 ---
 
@@ -86,37 +87,13 @@ Future enhancements based on usage patterns.
 
 | Feature | Status | Priority | Effort | Value | Notes |
 |---------|--------|----------|--------|-------|-------|
-| **AI-Generated Dynamic Waypoints** | 💡 | 🟠 | ⚡⚡ | ⭐⭐⭐⭐⭐ | AI suggests ANY historical moment as clickable coordinates |
-| **Hyper-Realistic Image Generation** | 💡 | 🟠 | ⚡⚡ | ⭐⭐⭐⭐⭐ | Enhanced prompts for photorealistic "you are there" imagery |
+| **Hyper-Realistic Image Generation** | 💡 | 🟢 | ⚡⚡ | ⭐⭐⭐⭐ | Enhanced prompts for photorealistic "you are there" imagery |
 | **Compare Mode (Split View)** | 💡 | 🟢 | ⚡⚡⚡ | ⭐⭐⭐⭐ | Side-by-side comparison, different times |
 | **Real Historical Data** | 💡 | 🟢 | ⚡⚡⚡⚡ | ⭐⭐⭐⭐ | Replace simulated data with real records |
 | **Prompt Customization** | 💡 | 🟢 | ⚡⚡ | ⭐⭐⭐ | Advanced mode: tweak generation prompts |
 | **Astronomical Accuracy** | 💡 | 🟢 | ⚡⚡⚡ | ⭐⭐⭐ | Real sun/moon positions, accurate sky |
 | **Weather History Integration** | 💡 | 🟢 | ⚡⚡⚡ | ⭐⭐⭐ | Real historical weather data |
 | **Community Waypoints** | 💡 | 🟢 | ⚡⚡⚡⚡ | ⭐⭐⭐⭐ | User-submitted curated moments |
-
-### AI-Generated Dynamic Waypoints (HIGH PRIORITY)
-
-**Goal**: Allow the AI assistant to suggest ANY historical moment from its knowledge, not just curated waypoints.
-
-**Concept**: The LLM has vast knowledge of historical events with known locations and dates. Every suggestion becomes a clickable coordinate link that renders a new scene.
-
-**Examples of AI-Generated Suggestions**:
-- "You might enjoy witnessing the signing of the Magna Carta at [Runnymede, 1215](/?lat=51.4367&lng=-0.5650&year=1215&month=6&day=15&hour=12&minute=0)"
-- "Experience the first human-powered flight at [Kitty Hawk](/?lat=36.0176&lng=-75.6716&year=1903&month=12&day=17&hour=10&minute=35)"
-- "See the construction of the Colosseum in [Rome, 80 AD](/?lat=41.8902&lng=12.4922&year=80&month=3&day=1&hour=10&minute=0)"
-
-**Implementation**:
-1. Update AI context to encourage generating coordinate links for ANY historical event it knows
-2. AI extracts lat/lng from its knowledge of famous locations
-3. AI constructs proper URL format: `/?lat=X&lng=Y&year=Z&month=M&day=D&hour=H&minute=MM`
-4. User clicks link → page navigates → scene renders → AI greets them at new location
-
-**Value**: Transforms the app from 8 curated waypoints to INFINITE explorable moments. The AI becomes a knowledgeable time-travel guide who can take you anywhere in history.
-
-**User Experience**:
-- User: "I'm interested in ancient Rome"
-- AI: "Let me take you to some incredible moments! Visit [Julius Caesar's assassination](/?lat=41.8925&lng=12.4769&year=-44&month=3&day=15&hour=11&minute=0) at the Theatre of Pompey, or witness [Nero's Great Fire](/?lat=41.8902&lng=12.4853&year=64&month=7&day=19&hour=22&minute=0) engulfing the city..."
 
 ---
 
@@ -258,7 +235,8 @@ Track these KPIs to guide future development:
 | 1.1.0 | 2025-11-28 | Phase 1: Essential UX (sharing, history, gallery) ✅ |
 | 1.1.1 | 2025-11-28 | Bug fixes: URL sharing coordinates, image display persistence, gallery deduplication ✅ |
 | 1.2.0 | 2025-12-01 | Security hardening, refreshed waypoints, UI improvements ✅ |
-| 1.3.0 | TBD | Phase 2: Temporal navigation (slider, chat) |
+| 1.3.0 | 2025-12-01 | Temporal Assistant with AI-generated dynamic waypoints ✅ |
+| 1.4.0 | TBD | Phase 2: Temporal navigation (time-lapse slider) |
 | 2.0.0 | TBD | Phase 3: Enhanced discovery |
 
 ---
