@@ -34,7 +34,26 @@ function saveJournal(journal: TemporalJournal): void {
 }
 
 /**
- * Add a new journal entry
+ * Check if two coordinates are the same location/time
+ */
+function coordinatesMatch(a: SpacetimeCoordinates, b: SpacetimeCoordinates): boolean {
+  return (
+    a.spatial.latitude === b.spatial.latitude &&
+    a.spatial.longitude === b.spatial.longitude &&
+    a.temporal.year === b.temporal.year &&
+    a.temporal.month === b.temporal.month &&
+    a.temporal.day === b.temporal.day &&
+    a.temporal.hour === b.temporal.hour &&
+    a.temporal.minute === b.temporal.minute
+  );
+}
+
+// Time window for considering an entry as "recent" (5 minutes)
+const RECENT_ENTRY_THRESHOLD_MS = 5 * 60 * 1000;
+
+/**
+ * Add a new journal entry (idempotent for recent identical coordinates)
+ * If a recent entry exists for the same coordinates, updates it instead of creating a duplicate
  */
 export function addJournalEntry(
   coordinates: SpacetimeCoordinates,
@@ -43,12 +62,37 @@ export function addJournalEntry(
   thumbnail?: string
 ): JournalEntry {
   const journal = getJournal();
+  const now = Date.now();
+
+  // Check if the most recent entry is for the same coordinates and was created recently
+  if (journal.entries.length > 0) {
+    const lastEntry = journal.entries[0];
+    const timeSinceLastEntry = now - lastEntry.timestamp;
+
+    if (
+      coordinatesMatch(lastEntry.coordinates, coordinates) &&
+      timeSinceLastEntry < RECENT_ENTRY_THRESHOLD_MS
+    ) {
+      // Update the existing entry instead of creating a duplicate
+      // Only upgrade hasGeneratedImage (false -> true), never downgrade
+      if (hasGeneratedImage && !lastEntry.hasGeneratedImage) {
+        lastEntry.hasGeneratedImage = true;
+      }
+      if (thumbnail && !lastEntry.thumbnail) {
+        lastEntry.thumbnail = thumbnail;
+      }
+      // Update timestamp to reflect latest interaction
+      lastEntry.timestamp = now;
+      saveJournal(journal);
+      return lastEntry;
+    }
+  }
 
   const newEntry: JournalEntry = {
     id: crypto.randomUUID(),
     coordinates,
     locationName,
-    timestamp: Date.now(),
+    timestamp: now,
     hasGeneratedImage,
     thumbnail,
   };
